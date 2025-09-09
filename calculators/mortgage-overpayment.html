@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mortgage Overpayment — Pennyriser</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <header class="container"><h1>Pennyriser</h1></header>
+  <main class="container">
+    <article class="card">
+      <h2>Mortgage Overpayment</h2>
+      <p class="tldr">Enter your numbers. See your savings (estimate).</p>
+
+      <label>Loan amount (£)</label>
+      <input id="loan" type="number" value="250000" min="0" />
+
+      <label>Interest rate (% per year)</label>
+      <input id="rate" type="number" value="5" step="0.01" min="0" />
+
+      <label>Term (years)</label>
+      <input id="years" type="number" value="25" min="1" />
+
+      <label>Extra monthly payment (£)</label>
+      <input id="extra" type="number" value="100" min="0" />
+
+      <button class="btn btn-primary" id="calcBtn">Calculate →</button>
+      <div id="result" class="tldr" style="margin-top:12px"></div>
+
+      <p class="small">Educational estimate only. Not advice.</p>
+      <p><a class="btn" href="/">Back to Home</a></p>
+    </article>
+  </main>
+
+  <script>
+    function pm(r,n,pv){ return pv*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1); }
+    function simulate(pv, rate, years, extra){
+      const r = rate/100/12, n = years*12, basePay = pm(r,n,pv);
+      let bal = pv, m = 0, total = 0, pay = basePay + extra;
+      while(bal > 0 && m < 1000*12){
+        const interest = bal*r;
+        let principal = pay - interest;
+        if (principal > bal) principal = bal;
+        bal -= principal;
+        total += pay;
+        m++;
+      }
+      const months = m;
+      return { basePay, pay, months };
+    }
+    document.getElementById('calcBtn').addEventListener('click', ()=>{
+      const loan = +document.getElementById('loan').value || 0;
+      const rate = +document.getElementById('rate').value || 0;
+      const years= +document.getElementById('years').value || 0;
+      const extra = +document.getElementById('extra').value || 0;
+      if (loan<=0 || rate<0 || years<=0) {
+        document.getElementById('result').textContent = 'Please enter valid numbers.'; return;
+      }
+      const res = simulate(loan, rate, years, extra);
+      const fmt = n => n.toLocaleString(undefined,{maximumFractionDigits:0});
+      const monthsToYears = m => `${Math.floor(m/12)}y ${m%12}m`;
+      document.getElementById('result').innerHTML =
+        `Monthly (no extra): £${fmt(res.basePay)}<br>` +
+        `With extra: £${fmt(res.pay)}<br>` +
+        `Finish in: ${monthsToYears(res.months)}`;
+    });
+  </script>
+</body>
+</html>

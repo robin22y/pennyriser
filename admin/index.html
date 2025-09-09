@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Pennyriser</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <article class="card" style="max-width:640px">
+      <h2>Admin (diagnostic)</h2>
+      <p id="who" class="tldr">Checking sign-in…</p>
+      <div style="display:flex; gap:8px; margin-top:12px">
+  <a class="btn" id="home" href="/">Home</a>
+  <button class="btn" id="backToLogin">Back to Login</button>
+  <button class="btn" id="logout">Log out</button>
+</div>
+
+      <p class="small">If this page loads and shows your email, auth works.</p>
+    </article>
+  </main>
+
+  <!-- Load scripts at the end, in order -->
+  <script src="/assets/firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+
+  <script src="/admin/admin.js"></script>
+</body>
+</html>

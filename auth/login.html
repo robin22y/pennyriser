@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Log in — Pennyriser</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <header class="container"><h1>Pennyriser</h1></header>
+
+  <main class="container">
+    <article class="card" style="max-width:520px">
+      <h2>Log in / Sign up</h2>
+
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-primary" id="loginBtn">Log in</button>
+        <button type="button" class="btn" id="signupBtn">Sign up</button>
+      </div>
+
+      <p id="msg" class="small"></p>
+      <p class="small">This site is for <strong>education only</strong>, not financial advice.</p>
+      <p class="small"><a href="/admin/index.html">Go to Admin</a> (admins only)</p>
+    </article>
+  </main>
+
+  <!-- Load scripts ONCE, in this order -->
+  <script src="/assets/firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+<script src="/auth/auth.js"></script>h.js"></script>
+</body>
+</html>

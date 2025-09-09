@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<header class="container" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+  <h1>Pennyriser</h1>
+  <div id="session" class="small">
+    <span id="userGreet"></span>
+    <a id="loginLink" href="/auth/login.html">Log in</a>
+    <button id="logoutBtn" class="btn" hidden>Log out</button>
+  </div>
+</header>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pennyriser — Home</title>
+  <meta name="description" content="Bite-sized personal finance lessons and calculators." />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <!-- Notice -->
+  <div class="notice-bar" role="status" aria-live="polite">
+    <span id="noticeText" class="notice-text">Education only — not financial advice.</span>
+  </div>
+
+  <header class="container"><h1>Pennyriser</h1></header>
+
+  <main class="container">
+    <div style="display:grid; grid-template-columns:2fr 1fr; gap:16px;">
+      <section>
+        <article class="card">
+          <h2>Welcome to Pennyriser</h2>
+          <p>Short lessons. Simple language. Useful tools.</p>
+          <p><a class="btn" href="/finance/asset-vs-liability.html">Start: Asset vs Liability →</a></p>
+          <p><a class="btn" href="/calculators/mortgage-overpayment.html">Try a Calculator →</a></p>
+          <p><a class="btn" href="/auth/login.html">Log in / Admin →</a></p>
+        </article>
+      </section>
+      <aside id="adBox"></aside>
+    </div>
+  </main>
+
+  <footer class="container">
+    <p><strong>Disclaimer:</strong> Educational only. Not financial advice.</p>
+  </footer>
+
+  <!-- Firebase only for Notice/Ad on HOME -->
+  <script src="/assets/firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="/assets/public-data.js"></script>
+  <script src="/assets/firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+
+<script>
+  // Small session UI for the home page
+  if (!firebase.apps.length) { firebase.initializeApp(window.__FIREBASE_CONFIG__); }
+  const auth = firebase.auth();
+  const greet = document.getElementById('userGreet');
+  const loginLink = document.getElementById('loginLink');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  auth.onAuthStateChanged((user)=>{
+    if (user) {
+      greet.textContent = 'Hi, ' + (user.email || 'friend');
+      loginLink.style.display = 'none';
+      logoutBtn.hidden = false;
+    } else {
+      greet.textContent = '';
+      loginLink.style.display = '';
+      logoutBtn.hidden = true;
+    }
+  });
+
+  logoutBtn?.addEventListener('click', async ()=>{
+    try { await auth.signOut(); } catch(e){}
+    // stay on home; UI will update automatically
+  });
+ 
+</script>
+<script src="/assets/firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+<script>
+  if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  const greet     = document.getElementById('userGreet');
+  const loginLink = document.getElementById('loginLink');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const adminLink = document.getElementById('adminLink');
+
+  async function setRoleUI(user){
+    // Default UI for signed-in user
+    greet.textContent = 'Hi, ' + (user.email || 'friend');
+    loginLink.style.display = 'none';
+    logoutBtn.hidden = false;
+    adminLink.hidden = true;
+
+    try {
+      const doc = await db.collection('users').doc(user.uid).get();
+      const role = doc.exists ? doc.data().role : null;
+      if (role === 'admin') {
+        adminLink.hidden = false; // Only admins see the Admin button
+      }
+    } catch(e){ /* ignore; keep Admin hidden */ }
+  }
+
+  auth.onAuthStateChanged((user)=>{
+    if (user) {
+      setRoleUI(user);
+    } else {
+      greet.textContent = '';
+      loginLink.style.display = '';
+      logoutBtn.hidden = true;
+      adminLink.hidden = true;
+    }
+  });
+
+  logoutBtn?.addEventListener('click', async ()=>{
+    try { await auth.signOut(); } catch(e){}
+    // UI updates automatically via onAuthStateChanged
+  });
+</script>
+
+
+</body>
+</html>
