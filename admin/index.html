@@ -8,43 +8,72 @@
 </head>
 <body>
   <main class="container">
-    <article class="card" style="max-width:860px">
+    <article class="card" style="max-width:980px">
       <h2>Admin</h2>
       <p id="who" class="tldr">Checking sign-in…</p>
 
-      <!-- NOTICE FORM -->
+      <!-- NOTICE -->
       <section class="card" style="margin-top:12px">
         <h3>Notice Bar</h3>
         <label>Text</label>
         <textarea id="noticeTextInput" rows="2" placeholder="Education only — not financial advice."></textarea>
-
         <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:8px 0">
           <label>Priority <input id="noticePriority" type="number" value="10" style="width:120px"></label>
           <label><input id="noticeActive" type="checkbox" checked> Active</label>
         </div>
-
         <button class="btn btn-primary" id="saveNotice">Save Notice</button>
         <span id="noticeMsg" class="small"></span>
       </section>
 
-      <!-- AD FORM -->
+      <!-- AD -->
       <section class="card" style="margin-top:12px">
         <h3>Sidebar Ad</h3>
         <label>Headline</label>
         <input id="adHeadline" type="text" placeholder="Compare Mortgage Deals">
-
         <label>Body</label>
         <textarea id="adBody" rows="2" placeholder="Find a lower rate in minutes."></textarea>
-
         <label>Link URL</label>
         <input id="adLink" type="url" placeholder="https://example.com">
-
         <div style="margin:8px 0">
           <label><input id="adActive" type="checkbox" checked> Active</label>
         </div>
-
         <button class="btn btn-primary" id="saveAd">Save Ad</button>
         <span id="adMsg" class="small"></span>
+      </section>
+
+      <!-- LESSONS CMS -->
+      <section class="card" style="margin-top:12px">
+        <h3>Lessons CMS</h3>
+
+        <div class="card" style="margin-bottom:12px">
+          <h4>Create / Edit Lesson</h4>
+          <input type="hidden" id="lessonId" />
+          <label>Title</label>
+          <input id="lessonTitle" type="text" placeholder="Asset vs Liability" />
+          <label>Slug (unique, URL-friendly)</label>
+          <input id="lessonSlug" type="text" placeholder="asset-vs-liability" />
+          <label>Content (HTML allowed; keep it simple)</label>
+          <textarea id="lessonContent" rows="8" placeholder="<p>Short lesson body...</p>"></textarea>
+          <label>Status</label>
+          <select id="lessonStatus">
+            <option value="draft">draft</option>
+            <option value="published">published</option>
+          </select>
+          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap">
+            <button class="btn btn-primary" id="saveLesson">Save / Update</button>
+            <button class="btn" id="newLesson">New</button>
+            <button class="btn" id="deleteLesson">Delete</button>
+          </div>
+          <span id="lessonMsg" class="small"></span>
+        </div>
+
+        <div class="card">
+          <h4>All Lessons</h4>
+          <table class="table" style="width:100%">
+            <thead><tr><th>Title</th><th>Slug</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+            <tbody id="lessonsTable"></tbody>
+          </table>
+        </div>
       </section>
 
       <div style="display:flex; gap:8px; margin-top:16px">
@@ -55,7 +84,7 @@
     </article>
   </main>
 
-  <!-- Scripts at the end -->
+  <!-- Scripts -->
   <script src="/assets/firebase-config.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>

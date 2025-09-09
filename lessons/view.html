@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lesson — Pennyriser</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <header class="container"><h1>Lesson</h1></header>
+  <main class="container">
+    <article class="card">
+      <h2 id="title">Loading…</h2>
+      <div id="content"></div>
+      <p style="margin-top:12px">
+        <a class="btn" href="/lessons/index.html">All Lessons</a>
+        <a class="btn" href="/">Home</a>
+      </p>
+    </article>
+    <aside id="adBox"></aside>
+  </main>
+
+  <script src="/assets/firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script>
+    if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
+    const db = firebase.firestore();
+
+    function getParam(name){
+      const url = new URL(location.href);
+      return url.searchParams.get(name);
+    }
+
+    async function loadLesson(){
+      const slug = getParam('slug');
+      const titleEl = document.getElementById('title');
+      const contentEl = document.getElementById('content');
+      if (!slug){ titleEl.textContent = 'Missing slug'; return; }
+      try{
+        const snap = await db.collection('lessons')
+          .where('slug','==',slug)
+          .where('status','==','published')
+          .limit(1).get();
+        if (snap.empty){ titleEl.textContent = 'Lesson not found'; return; }
+        const d = snap.docs[0].data();
+        titleEl.textContent = d.title || slug;
+        // Admin-authored HTML is trusted here
+        contentEl.innerHTML = d.content || '';
+        document.title = (d.title || 'Lesson') + ' — Pennyriser';
+      }catch(e){ titleEl.textContent = e.message; }
+    }
+    loadLesson();
+  </script>
+
+  <script src="/assets/public-data.js"></script>
+</body>
+</html>
