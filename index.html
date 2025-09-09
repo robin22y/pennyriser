@@ -59,45 +59,43 @@
 
   <!-- Session UI: greeting, login/logout, admin-only button -->
   <script>
-    if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
-    const auth = firebase.auth();
-    const db   = firebase.firestore();
+(function(){
+  if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
+  const auth  = firebase.auth();
+  const prDb  = firebase.firestore();  // local name
 
-    const greet     = document.getElementById('userGreet');
-    const loginLink = document.getElementById('loginLink');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const adminLink = document.getElementById('adminLink');
+  const greet     = document.getElementById('userGreet');
+  const loginLink = document.getElementById('loginLink');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const adminLink = document.getElementById('adminLink');
 
-    async function updateForUser(user){
-      if (!user) {
-        greet.textContent = '';
-        loginLink.hidden = false;
-        logoutBtn.hidden = true;
-        adminLink.hidden = true;
-        return;
-      }
-      // Logged-in defaults
-      greet.textContent = 'Hi, ' + (user.email || 'friend');
-      loginLink.hidden = true;
-      logoutBtn.hidden = false;
-      adminLink.hidden = true;
-
-      // Show Admin button only if role=admin
-      try {
-        const snap = await db.collection('users').doc(user.uid).get();
-        const role = snap.exists ? snap.data().role : null;
-        if (role === 'admin') adminLink.hidden = false;
-      } catch (e) {
-        // ignore errors; keep admin hidden
-      }
+  async function updateForUser(user){
+    if (!user) {
+      greet.textContent = '';
+      loginLink.hidden = false;
+      logoutBtn.hidden = true;
+      if (adminLink) adminLink.hidden = true;
+      return;
     }
+    greet.textContent = 'Hi, ' + (user.email || 'friend');
+    loginLink.hidden = true;
+    logoutBtn.hidden = false;
+    if (adminLink) adminLink.hidden = true;
 
-    auth.onAuthStateChanged(updateForUser);
+    try {
+      const snap = await prDb.collection('users').doc(user.uid).get();
+      const role = snap.exists ? snap.data().role : null;
+      if (role === 'admin' && adminLink) adminLink.hidden = false;
+    } catch (e) { /* keep admin hidden */ }
+  }
 
-    logoutBtn?.addEventListener('click', async ()=>{
-      try { await auth.signOut(); } catch(e){}
-      // UI will update via onAuthStateChanged
-    });
-  </script>
+  auth.onAuthStateChanged(updateForUser);
+
+  logoutBtn?.addEventListener('click', async ()=>{
+    try { await auth.signOut(); } catch(e){}
+  });
+})();
+</script>
+
 </body>
 </html>
