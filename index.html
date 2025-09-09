@@ -1,15 +1,6 @@
 <!doctype html>
 <html lang="en">
 <head>
-<header class="container" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-  <h1>Pennyriser</h1>
-  <div id="session" class="small">
-    <span id="userGreet"></span>
-    <a id="loginLink" href="/auth/login.html">Log in</a>
-    <button id="logoutBtn" class="btn" hidden>Log out</button>
-  </div>
-</header>
-
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Pennyriser — Home</title>
@@ -17,13 +8,26 @@
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
 <body>
-  <!-- Notice -->
+  <!-- Notice (public info, loaded from Firestore) -->
   <div class="notice-bar" role="status" aria-live="polite">
     <span id="noticeText" class="notice-text">Education only — not financial advice.</span>
   </div>
 
-  <header class="container"><h1>Pennyriser</h1></header>
+  <!-- Header with session UI -->
+  <header class="container" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+    <h1>Pennyriser</h1>
+    <div id="session" class="small">
+      <span id="userGreet"></span>
+      <!-- Shown when logged OUT -->
+      <a id="loginLink" href="/auth/login.html">Log in / Sign up</a>
+      <!-- Shown when logged IN -->
+      <button id="logoutBtn" class="btn" hidden>Log out</button>
+      <!-- Only for admins -->
+      <a id="adminLink" class="btn" href="/admin/index.html" hidden>Admin</a>
+    </div>
+  </header>
 
+  <!-- Main -->
   <main class="container">
     <div style="display:grid; grid-template-columns:2fr 1fr; gap:16px;">
       <section>
@@ -32,7 +36,6 @@
           <p>Short lessons. Simple language. Useful tools.</p>
           <p><a class="btn" href="/finance/asset-vs-liability.html">Start: Asset vs Liability →</a></p>
           <p><a class="btn" href="/calculators/mortgage-overpayment.html">Try a Calculator →</a></p>
-          <p><a class="btn" href="/auth/login.html">Log in / Admin →</a></p>
         </article>
       </section>
       <aside id="adBox"></aside>
@@ -43,88 +46,56 @@
     <p><strong>Disclaimer:</strong> Educational only. Not financial advice.</p>
   </footer>
 
-  <!-- Firebase only for Notice/Ad on HOME -->
+  <!-- Scripts: load once, in this order -->
   <script src="/assets/firebase-config.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+
+  <!-- Public data (notice + ad) -->
   <script src="/assets/public-data.js"></script>
-  <script src="/assets/firebase-config.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
 
-<script>
-  // Small session UI for the home page
-  if (!firebase.apps.length) { firebase.initializeApp(window.__FIREBASE_CONFIG__); }
-  const auth = firebase.auth();
-  const greet = document.getElementById('userGreet');
-  const loginLink = document.getElementById('loginLink');
-  const logoutBtn = document.getElementById('logoutBtn');
+  <!-- Session UI: greeting, login/logout, admin-only button -->
+  <script>
+    if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
 
-  auth.onAuthStateChanged((user)=>{
-    if (user) {
-      greet.textContent = 'Hi, ' + (user.email || 'friend');
-      loginLink.style.display = 'none';
-      logoutBtn.hidden = false;
-    } else {
-      greet.textContent = '';
-      loginLink.style.display = '';
-      logoutBtn.hidden = true;
-    }
-  });
+    const greet     = document.getElementById('userGreet');
+    const loginLink = document.getElementById('loginLink');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const adminLink = document.getElementById('adminLink');
 
-  logoutBtn?.addEventListener('click', async ()=>{
-    try { await auth.signOut(); } catch(e){}
-    // stay on home; UI will update automatically
-  });
- 
-</script>
-<script src="/assets/firebase-config.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
-<script>
-  if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
-  const auth = firebase.auth();
-  const db   = firebase.firestore();
-
-  const greet     = document.getElementById('userGreet');
-  const loginLink = document.getElementById('loginLink');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const adminLink = document.getElementById('adminLink');
-
-  async function setRoleUI(user){
-    // Default UI for signed-in user
-    greet.textContent = 'Hi, ' + (user.email || 'friend');
-    loginLink.style.display = 'none';
-    logoutBtn.hidden = false;
-    adminLink.hidden = true;
-
-    try {
-      const doc = await db.collection('users').doc(user.uid).get();
-      const role = doc.exists ? doc.data().role : null;
-      if (role === 'admin') {
-        adminLink.hidden = false; // Only admins see the Admin button
+    async function updateForUser(user){
+      if (!user) {
+        greet.textContent = '';
+        loginLink.hidden = false;
+        logoutBtn.hidden = true;
+        adminLink.hidden = true;
+        return;
       }
-    } catch(e){ /* ignore; keep Admin hidden */ }
-  }
-
-  auth.onAuthStateChanged((user)=>{
-    if (user) {
-      setRoleUI(user);
-    } else {
-      greet.textContent = '';
-      loginLink.style.display = '';
-      logoutBtn.hidden = true;
+      // Logged-in defaults
+      greet.textContent = 'Hi, ' + (user.email || 'friend');
+      loginLink.hidden = true;
+      logoutBtn.hidden = false;
       adminLink.hidden = true;
+
+      // Show Admin button only if role=admin
+      try {
+        const snap = await db.collection('users').doc(user.uid).get();
+        const role = snap.exists ? snap.data().role : null;
+        if (role === 'admin') adminLink.hidden = false;
+      } catch (e) {
+        // ignore errors; keep admin hidden
+      }
     }
-  });
 
-  logoutBtn?.addEventListener('click', async ()=>{
-    try { await auth.signOut(); } catch(e){}
-    // UI updates automatically via onAuthStateChanged
-  });
-</script>
+    auth.onAuthStateChanged(updateForUser);
 
-
+    logoutBtn?.addEventListener('click', async ()=>{
+      try { await auth.signOut(); } catch(e){}
+      // UI will update via onAuthStateChanged
+    });
+  </script>
 </body>
 </html>
