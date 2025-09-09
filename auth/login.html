@@ -13,7 +13,7 @@
     <article class="card" style="max-width:520px">
       <h2>Log in / Sign up</h2>
 
-      <!-- not a <form> (prevents auto-submit refresh) -->
+      <!-- Not a <form> (prevents auto-submit refresh) -->
       <label for="email">Email</label>
       <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
 
@@ -26,15 +26,77 @@
         <a class="btn" href="/">Home</a>
       </div>
 
-      <p id="msg" class="small"></p>
+      <p id="msg" class="small" style="min-height:1.2em"></p>
       <p class="small">Educational only — not financial advice.</p>
     </article>
   </main>
 
-  <!-- Scripts at the very end, in order (once) -->
-  <script src="/assets/firebase-config.js"></script>
+  <!-- 1) Inline Firebase config to avoid missing-file issues -->
+  <script>
+    window.__FIREBASE_CONFIG__ = {
+      apiKey: "AIzaSyCYFsmSWqZV583BFoUAOhOHge-iIZMgIuc",
+      authDomain: "pennyriser-7c1a9.firebaseapp.com",
+      projectId: "pennyriser-7c1a9",
+      storageBucket: "pennyriser-7c1a9.firebasestorage.app",
+      messagingSenderId: "627254669558",
+      appId: "1:627254669558:web:58d185301ef142925c7cd7"
+    };
+  </script>
+
+  <!-- 2) Load compat SDKs exactly once, after config -->
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
-  <script src="/auth/auth.js"></script>
+
+  <!-- 3) Minimal, robust login logic -->
+  <script>
+  (function(){
+    const say = (t)=>{ const m=document.getElementById('msg'); if(m) m.textContent=t; };
+
+    try{
+      if (!window.__FIREBASE_CONFIG__) { say('Missing Firebase config'); return; }
+      if (!firebase?.apps?.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
+    } catch(e){ console.error(e); say('Failed to init Firebase'); return; }
+
+    const auth = firebase.auth();
+    const email = document.getElementById('email');
+    const pass  = document.getElementById('password');
+    const loginBtn  = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+
+    // Prevent accidental form submit refresh (we have no <form>, but belt & braces)
+    [loginBtn, signupBtn].forEach(btn=>{
+      btn?.addEventListener('click', ev => ev.preventDefault());
+    });
+
+    loginBtn?.addEventListener('click', async ()=>{
+      try {
+        await auth.signInWithEmailAndPassword(email.value.trim(), pass.value);
+        say('Logged in. Taking you home…');
+        try { location.replace('/'); } catch(_) {}
+        setTimeout(()=>location.assign('/'), 120);
+      } catch (err) {
+        console.error(err); say(err.message || 'Login failed');
+      }
+    });
+
+    signupBtn?.addEventListener('click', async ()=>{
+      try {
+        await auth.createUserWithEmailAndPassword(email.value.trim(), pass.value);
+        say('Account created. Now click Log in.');
+      } catch (err) {
+        console.error(err); say(err.message || 'Signup failed');
+      }
+    });
+
+    // Optional: if already signed in, go home
+    auth.onAuthStateChanged((user)=>{
+      if (user) {
+        say('You are already logged in. Taking you home…');
+        try { location.replace('/'); } catch(_) {}
+        setTimeout(()=>location.assign('/'), 120);
+      }
+    });
+  })();
+  </script>
 </body>
 </html>
