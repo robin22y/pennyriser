@@ -14,59 +14,60 @@
       text-align:center; gap:14px; padding:24px 16px;
     }
     .hero h1 { font-size: clamp(28px, 6vw, 44px); margin: 0; }
-    .hero p  { font-size: clamp(14px, 2.8vw, 18px); color:#475569; margin: 0 0 8px; }
+    .hero p  { font-size: clamp(14px, 2.8vw, 18px); color:var(--muted); margin: 0 0 8px; }
     .cta-row { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px; }
     .btn.big { padding: 14px 18px; font-size: 16px; border-radius: 12px; }
     header.container { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; }
     #session a, #session button { font-size: 14px; }
-    footer.container { text-align:center; padding:16px; color:#64748b; }
-    @media (max-width:720px){ .hero { min-height: calc(100dvh - 180px); } }
+    .hero-image { max-width: 600px; width: 80%; height: auto; margin-bottom: 2rem; }
+    .btn.icon-left { display: flex; align-items: center; gap: 8px; }
   </style>
 </head>
 <body>
-  <!-- Notice -->
   <div class="notice-bar" role="status" aria-live="polite">
     <span id="noticeText" class="notice-text">Education only — not financial advice.</span>
   </div>
 
-  <!-- Top bar kept tiny -->
   <header class="container">
-  <div style="display:flex; gap:16px; align-items:center;">
-    <div><strong>Pennyriser</strong></div>
-    <a class="btn" href="/calculators/mortgage-overpayment.html">Calculator</a>
-  </div>
-  <div id="session" class="small" style="display:flex;gap:8px;align-items:center;">
-    <span id="userGreet"></span>
-    <a id="loginLink" href="/auth/login.html">Log in / Sign up</a>
-    <button id="logoutBtn" class="btn" hidden>Log out</button>
-    <a id="adminLink" class="btn" href="/admin/index.html" hidden>Admin</a>
-  </div>
-</header>
+    <div style="display:flex; gap:16px; align-items:center;">
+        <div><strong>Pennyriser</strong></div>
+        <a class="btn" href="/calculators/mortgage-overpayment.html">Calculator</a>
+    </div>
+    <div id="session" class="small" style="display:flex;gap:8px;align-items:center;">
+      <span id="userGreet"></span>
+      <a id="loginLink" href="/auth/login.html">Log in / Sign up</a>
+      <button id="logoutBtn" class="btn" hidden>Log out</button>
+      <a id="adminLink" class="btn" href="/admin/index.html" hidden>Admin</a>
+    </div>
+  </header>
 
-  <!-- Minimal hero -->
   <main class="hero">
+    <img src="/assets/hero-placeholder.svg" alt="Pennyriser hero image" class="hero-image" />
     <h1>Learn money. Simply.</h1>
     <p>Personal finance, investing & trading—short lessons and practical tools.</p>
-<div class="cta-row">
-  <a class="btn big btn-primary" href="/lessons/index.html">Learn Personal Finance</a>
-  <a class="btn big" href="/trading/lessons.html">Learn Stock Trading</a>
-</div>
+    <div class="cta-row">
+      <a class="btn big btn-primary icon-left" href="/lessons/index.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V6.5A2.5 2.5 0 0 0 17.5 4h-11A2.5 2.5 0 0 0 4 6.5v13Z"/><path d="M12 2v4"/><path d="M6 17v-3.5a2.5 2.5 0 0 1 5-1.77L14 15"/><path d="M18 17v-7.5a2.5 2.5 0 0 0-2.5-2.5h-7.85"/></svg>
+        Learn Personal Finance
+      </a>
+      <a class="btn big icon-left" href="/trading/lessons.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2"/><path d="M17 14V2l4 4"/><path d="M3 14h18"/><path d="m3 14-4-4"/></svg>
+        Learn Stock Trading
+      </a>
+    </div>
   </main>
 
   <footer class="container">
     <p><strong>Disclaimer:</strong> Educational only. Not financial advice.</p>
   </footer>
 
-  <!-- Firebase + Firestore -->
   <script src="/assets/firebase-config.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
 
-  <!-- Public data (notice) -->
   <script src="/assets/public-data.js"></script>
 
-  <!-- Session state: greet + login/logout + admin -->
   <script>
 (function(){
   if (!window.__FIREBASE_CONFIG__ || !window.firebase) return;
@@ -121,7 +122,6 @@
 </script>
 
 
-  <!-- Optional: bottom nav (keeps mobile flow consistent) -->
   <nav class="bottom-nav" role="navigation" aria-label="Primary">
     <ul>
       <li><a href="/" data-match="/"><span class="icon">🏠</span><span>Home</span></a></li>
@@ -148,7 +148,5 @@
       });
     })();
   </script>
-  
-  
 </body>
 </html>
