@@ -3,44 +3,51 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pennyriser — Home</title>
-  <meta name="description" content="Bite-sized personal finance lessons and calculators." />
+  <title>Pennyriser — Learn Personal Finance, Simply</title>
+  <meta name="description" content="Bite-sized lessons and calculators to master money basics and start investing—clear, practical, no jargon." />
   <link rel="stylesheet" href="/assets/styles.css" />
+  <style>
+    /* Minimal landing tweaks only */
+    .hero {
+      min-height: calc(100dvh - 140px);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; gap:14px; padding:24px 16px;
+    }
+    .hero h1 { font-size: clamp(28px, 6vw, 44px); margin: 0; }
+    .hero p  { font-size: clamp(14px, 2.8vw, 18px); color:#475569; margin: 0 0 8px; }
+    .cta-row { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px; }
+    .btn.big { padding: 14px 18px; font-size: 16px; border-radius: 12px; }
+    header.container { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; }
+    #session a, #session button { font-size: 14px; }
+    footer.container { text-align:center; padding:16px; color:#64748b; }
+    @media (max-width:720px){ .hero { min-height: calc(100dvh - 180px); } }
+  </style>
 </head>
 <body>
-  <!-- Notice (public info, loaded from Firestore) -->
+  <!-- Notice -->
   <div class="notice-bar" role="status" aria-live="polite">
     <span id="noticeText" class="notice-text">Education only — not financial advice.</span>
   </div>
 
-  <!-- Header with session UI -->
-  <header class="container" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-    <h1>Pennyriser</h1>
-    <div id="session" class="small">
+  <!-- Top bar kept tiny -->
+  <header class="container">
+    <div><strong>Pennyriser</strong></div>
+    <div id="session" class="small" style="display:flex;gap:8px;align-items:center;">
       <span id="userGreet"></span>
-      <!-- Shown when logged OUT -->
       <a id="loginLink" href="/auth/login.html">Log in / Sign up</a>
-      <!-- Shown when logged IN -->
       <button id="logoutBtn" class="btn" hidden>Log out</button>
-      <!-- Only for admins -->
       <a id="adminLink" class="btn" href="/admin/index.html" hidden>Admin</a>
     </div>
   </header>
 
-  <!-- Main -->
-  <main class="container">
-<div class="grid-2">
-      <section>
-        <article class="card">
-          <h2>Welcome to Pennyriser</h2>
-          <p>Short lessons. Simple language. Useful tools.</p>
-          <p><a class="btn" href="/finance/asset-vs-liability.html">Start: Asset vs Liability →</a></p>
-          <p><a class="btn" href="/calculators/mortgage-overpayment.html">Try a Calculator →</a></p>
-		  <p><a class="btn" href="/lessons/index.html">All Lessons →</a></p>
-
-        </article>
-      </section>
-      <aside id="adBox"></aside>
+  <!-- Minimal hero -->
+  <main class="hero">
+    <h1>Learn money. Simply.</h1>
+    <p>Personal finance, investing & trading—short lessons and practical tools.</p>
+    <div class="cta-row">
+      <a class="btn big btn-primary" href="/lessons/index.html">Start Learning</a>
+      <a class="btn big" href="/calculators/mortgage-overpayment.html">Use Calculators</a>
+      <a class="btn big" href="/finance/asset-vs-liability.html">Beginner: Asset vs Liability</a>
     </div>
   </main>
 
@@ -48,83 +55,77 @@
     <p><strong>Disclaimer:</strong> Educational only. Not financial advice.</p>
   </footer>
 
-  <!-- Scripts: load once, in this order -->
+  <!-- Firebase + Firestore -->
   <script src="/assets/firebase-config.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
 
-  <!-- Public data (notice + ad) -->
+  <!-- Public data (notice) -->
   <script src="/assets/public-data.js"></script>
 
-  <!-- Session UI: greeting, login/logout, admin-only button -->
+  <!-- Session state: greet + login/logout + admin -->
   <script>
-(function(){
-  if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
-  const auth  = firebase.auth();
-  const prDb  = firebase.firestore();  // local name
+  (function(){
+    if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
 
-  const greet     = document.getElementById('userGreet');
-  const loginLink = document.getElementById('loginLink');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const adminLink = document.getElementById('adminLink');
+    const greet     = document.getElementById('userGreet');
+    const loginLink = document.getElementById('loginLink');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const adminLink = document.getElementById('adminLink');
 
-  async function updateForUser(user){
-    if (!user) {
-      greet.textContent = '';
-      loginLink.hidden = false;
-      logoutBtn.hidden = true;
+    async function updateForUser(user){
+      if (!user) {
+        if (greet) greet.textContent = '';
+        if (loginLink) loginLink.hidden = false;
+        if (logoutBtn) logoutBtn.hidden = true;
+        if (adminLink) adminLink.hidden = true;
+        return;
+      }
+      if (greet) greet.textContent = 'Hi, ' + (user.email || 'friend');
+      if (loginLink) loginLink.hidden = true;
+      if (logoutBtn) logoutBtn.hidden = false;
       if (adminLink) adminLink.hidden = true;
-      return;
+
+      try {
+        const snap = await db.collection('users').doc(user.uid).get();
+        if (snap.exists && snap.data().role === 'admin') adminLink.hidden = false;
+      } catch(e){}
     }
-    greet.textContent = 'Hi, ' + (user.email || 'friend');
-    loginLink.hidden = true;
-    logoutBtn.hidden = false;
-    if (adminLink) adminLink.hidden = true;
 
-    try {
-      const snap = await prDb.collection('users').doc(user.uid).get();
-      const role = snap.exists ? snap.data().role : null;
-      if (role === 'admin' && adminLink) adminLink.hidden = false;
-    } catch (e) { /* keep admin hidden */ }
-  }
+    auth.onAuthStateChanged(updateForUser);
+    logoutBtn?.addEventListener('click', async ()=>{ try { await auth.signOut(); } catch(e){} });
+  })();
+  </script>
 
-  auth.onAuthStateChanged(updateForUser);
-
-  logoutBtn?.addEventListener('click', async ()=>{
-    try { await auth.signOut(); } catch(e){}
-  });
-})();
-</script>
-<!-- Bottom Nav -->
-<nav class="bottom-nav" role="navigation" aria-label="Primary">
-  <ul>
-    <li><a href="/" data-match="/">
-      <span class="icon">🏠</span><span>Home</span>
-    </a></li>
-    <li><a href="/lessons/index.html" data-match="/lessons/">
-      <span class="icon">📚</span><span>Lessons</span>
-    </a></li>
-    <li><a href="/calculators/mortgage-overpayment.html" data-match="/calculators/">
-      <span class="icon">🧮</span><span>Calculator</span>
-    </a></li>
-    <!-- Login / Logout (toggled by nav.js if Firebase available) -->
-    <li><a id="bn-login" href="/auth/login.html">
-      <span class="icon">🔑</span><span>Log in</span>
-    </a></li>
-    <li><a id="bn-logout" href="/auth/login.html" hidden>
-      <span class="icon">🚪</span><span>Log out</span>
-    </a></li>
-    <!-- Admin (only shown for admins) -->
-    <li><a id="bn-admin" href="/admin/index.html" data-match="/admin/" hidden>
-      <span class="icon">🛠️</span><span>Admin</span>
-    </a></li>
-  </ul>
-</nav>
-
-<!-- Load AFTER your other scripts -->
-<script src="/assets/nav.js"></script>
-
-
+  <!-- Optional: bottom nav (keeps mobile flow consistent) -->
+  <nav class="bottom-nav" role="navigation" aria-label="Primary">
+    <ul>
+      <li><a href="/" data-match="/"><span class="icon">🏠</span><span>Home</span></a></li>
+      <li><a href="/lessons/index.html" data-match="/lessons/"><span class="icon">📚</span><span>Lessons</span></a></li>
+      <li><a href="/calculators/mortgage-overpayment.html" data-match="/calculators/"><span class="icon">🧮</span><span>Calculator</span></a></li>
+      <li><a id="bn-login" href="/auth/login.html"><span class="icon">🔑</span><span>Log in</span></a></li>
+      <li><a id="bn-logout" href="/auth/login.html" hidden><span class="icon">🚪</span><span>Log out</span></a></li>
+      <li><a id="bn-admin" href="/admin/index.html" data-match="/admin/" hidden><span class="icon">🛠️</span><span>Admin</span></a></li>
+    </ul>
+  </nav>
+  <script src="/assets/nav.js"></script>
+  <script>
+    // Make bottom "Log out" actually sign out
+    (function(){
+      const btn = document.getElementById('bn-logout');
+      if (!btn) return;
+      btn.addEventListener('click', function(ev){
+        if (!(window.firebase && window.__FIREBASE_CONFIG__)) return;
+        ev.preventDefault();
+        try {
+          if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
+          firebase.auth().signOut().then(()=> location.href='/');
+        } catch(e){ location.href='/'; }
+      });
+    })();
+  </script>
 </body>
 </html>
