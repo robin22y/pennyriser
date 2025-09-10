@@ -27,19 +27,51 @@
 
       <!-- AD -->
       <section class="card" style="margin-top:12px">
-        <h3>Sidebar Ad</h3>
-        <label>Headline</label>
-        <input id="adHeadline" type="text" placeholder="Compare Mortgage Deals">
-        <label>Body</label>
-        <textarea id="adBody" rows="2" placeholder="Find a lower rate in minutes."></textarea>
-        <label>Link URL</label>
-        <input id="adLink" type="url" placeholder="https://example.com">
-        <div style="margin:8px 0">
-          <label><input id="adActive" type="checkbox" checked> Active</label>
-        </div>
-        <button class="btn btn-primary" id="saveAd">Save Ad</button>
-        <span id="adMsg" class="small"></span>
-      </section>
+  <h3>Ads</h3>
+  <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:end">
+    <label>Placement
+      <select id="adPlacement">
+        <option value="sidebar">Sidebar (site-wide)</option>
+        <option value="lesson-finance">Lesson: Personal Finance</option>
+        <option value="lesson-trading">Lesson: Stock Trading</option>
+        <option value="lesson-generic">Lesson: All (fallback)</option>
+      </select>
+    </label>
+    <button class="btn" id="loadSelectedAd">Load</button>
+  </div>
+
+  <label>Headline</label>
+  <input id="adHeadline" type="text" placeholder="Compare Mortgage Deals">
+
+  <label>Body</label>
+  <textarea id="adBody" rows="2" placeholder="Find a lower rate in minutes."></textarea>
+
+  <label>Link URL</label>
+  <input id="adLink" type="url" placeholder="https://example.com">
+
+  <label>Image URL (https)</label>
+  <input id="adImage" type="url" placeholder="https://.../banner.jpg">
+
+  <div style="margin:8px 0">
+    <label><input id="adActive" type="checkbox" checked> Active</label>
+  </div>
+
+  <button class="btn btn-primary" id="saveAd">Save Ad</button>
+  <span id="adMsg" class="small"></span>
+
+  <div id="adPreviewWrap" style="margin-top:12px">
+    <a class="ad-card" id="adPreview" href="#" target="_blank" rel="noopener" style="display:none">
+      <header>Sponsored</header>
+      <img id="adPrevImg" alt="" style="display:none" />
+      <div class="ad-body">
+        <h3 id="adPrevH"></h3>
+        <p id="adPrevB"></p>
+        <div class="cta">Learn more →</div>
+      </div>
+    </a>
+  </div>
+</section>
+
 
      <!-- LESSONS CMS -->
 <section class="card" style="margin-top:12px">

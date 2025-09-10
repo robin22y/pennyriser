@@ -8,18 +8,20 @@ const db   = firebase.firestore();
 const who = document.getElementById('who');
 
 // Auth guards
-document.getElementById('logout').onclick = () =>
-  auth.signOut().then(()=> location.href='/auth/login.html');
+document.getElementById('logout')?.addEventListener('click', () =>
+  auth.signOut().then(()=> location.href='/auth/login.html')
+);
 
-document.getElementById('backToLogin').onclick = () =>
-  auth.signOut().then(()=> location.href='/auth/login.html');
+document.getElementById('backToLogin')?.addEventListener('click', () =>
+  auth.signOut().then(()=> location.href='/auth/login.html')
+);
 
 async function requireAdmin(user){
-  if (!user) { who.textContent='Not signed in. Redirecting…'; setTimeout(()=>location.replace('/auth/login.html'),600); return false; }
+  if (!user) { if (who) who.textContent='Not signed in. Redirecting…'; setTimeout(()=>location.replace('/auth/login.html'),600); return false; }
   const snap = await db.collection('users').doc(user.uid).get();
   const role = snap.exists ? snap.data().role : null;
-  if (role !== 'admin') { who.textContent='Signed in but not admin. Going home…'; setTimeout(()=>location.replace('/'),800); return false; }
-  who.textContent = 'Admin verified: ' + (user.email || user.uid);
+  if (role !== 'admin') { if (who) who.textContent='Signed in but not admin. Going home…'; setTimeout(()=>location.replace('/'),800); return false; }
+  if (who) who.textContent = 'Admin verified: ' + (user.email || user.uid);
   return true;
 }
 
@@ -32,51 +34,93 @@ const noticeMsg       = document.getElementById('noticeMsg');
 async function loadNotice(){
   const doc = await db.collection('notices').doc('main').get();
   const d = doc.exists ? doc.data() : {};
-  noticeTextInput.value = d.text || 'Education only — not financial advice.';
-  noticePriority.value  = d.priority ?? 10;
-  noticeActive.checked  = !!d.active;
+  if (noticeTextInput) noticeTextInput.value = d.text || 'Education only — not financial advice.';
+  if (noticePriority)  noticePriority.value  = d.priority ?? 10;
+  if (noticeActive)    noticeActive.checked  = !!d.active;
 }
-document.getElementById('saveNotice').onclick = async ()=>{
+document.getElementById('saveNotice')?.addEventListener('click', async ()=>{
   try {
     await db.collection('notices').doc('main').set({
-      text: noticeTextInput.value.trim(),
-      priority: Number(noticePriority.value)||10,
-      active: !!noticeActive.checked,
+      text: (noticeTextInput?.value || '').trim(),
+      priority: Number(noticePriority?.value)||10,
+      active: !!noticeActive?.checked,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
-    noticeMsg.textContent = 'Saved ✔'; setTimeout(()=>noticeMsg.textContent='',1500);
-  } catch(e){ noticeMsg.textContent = e.message; }
-};
+    if (noticeMsg) { noticeMsg.textContent = 'Saved ✔'; setTimeout(()=>noticeMsg.textContent='',1500); }
+  } catch(e){ if (noticeMsg) noticeMsg.textContent = e.message; }
+});
 
-/* -------------------- AD -------------------- */
-const adHeadline = document.getElementById('adHeadline');
-const adBody     = document.getElementById('adBody');
-const adLink     = document.getElementById('adLink');
-const adActive   = document.getElementById('adActive');
-const adMsg      = document.getElementById('adMsg');
+/* -------------------- ADS (placements + image + preview) -------------------- */
+const adPlacement = document.getElementById('adPlacement');   // sidebar | lesson-finance | lesson-trading | lesson-generic
+const adHeadline  = document.getElementById('adHeadline');
+const adBody      = document.getElementById('adBody');
+const adLink      = document.getElementById('adLink');
+const adImage     = document.getElementById('adImage');       // NEW
+const adActive    = document.getElementById('adActive');
+const adMsg       = document.getElementById('adMsg');
 
-async function loadAd(){
-  const doc = await db.collection('ads').doc('sidebar').get();
-  const d = doc.exists ? doc.data() : {};
-  adHeadline.value = d.headline || '';
-  adBody.value     = d.body || '';
-  adLink.value     = d.url || '';
-  adActive.checked = !!d.active;
+// Preview elements (optional)
+const adPreview = document.getElementById('adPreview');
+const adPrevImg = document.getElementById('adPrevImg');
+const adPrevH   = document.getElementById('adPrevH');
+const adPrevB   = document.getElementById('adPrevB');
+
+function paintPreview(){
+  if (!adPreview) return;
+  const h = adHeadline?.value.trim();
+  const b = adBody?.value.trim();
+  const u = adLink?.value.trim();
+  const img = adImage?.value.trim();
+
+  adPreview.style.display = (h || b || img) ? 'block' : 'none';
+  adPreview.href = u || '#';
+  if (adPrevH) adPrevH.textContent = h || '';
+  if (adPrevB) adPrevB.textContent = b || '';
+  if (adPrevImg) {
+    if (img) { adPrevImg.src = img; adPrevImg.style.display='block'; }
+    else { adPrevImg.removeAttribute('src'); adPrevImg.style.display='none'; }
+  }
 }
-document.getElementById('saveAd').onclick = async ()=>{
+[adHeadline, adBody, adLink, adImage].forEach(el=> el?.addEventListener('input', paintPreview));
+
+async function loadAdById(id){
+  const doc = await db.collection('ads').doc(id).get();
+  const d = doc.exists ? doc.data() : {};
+  if (adHeadline) adHeadline.value = d.headline || '';
+  if (adBody)     adBody.value     = d.body || '';
+  if (adLink)     adLink.value     = d.url || '';
+  if (adImage)    adImage.value    = d.imageUrl || '';
+  if (adActive)   adActive.checked = !!d.active;
+  paintPreview();
+}
+document.getElementById('loadSelectedAd')?.addEventListener('click', ()=>{
+  const id = adPlacement?.value || 'sidebar';
+  loadAdById(id);
+});
+
+// default load on open (if the controls exist)
+async function loadAd(){
+  if (!adPlacement) return;
+  await loadAdById(adPlacement.value || 'sidebar');
+}
+
+document.getElementById('saveAd')?.addEventListener('click', async ()=>{
   try {
-    await db.collection('ads').doc('sidebar').set({
-      headline: adHeadline.value.trim(),
-      body: adBody.value.trim(),
-      url: adLink.value.trim(),
-      active: !!adActive.checked,
+    const id = adPlacement?.value || 'sidebar';
+    await db.collection('ads').doc(id).set({
+      headline: (adHeadline?.value || '').trim(),
+      body: (adBody?.value || '').trim(),
+      url: (adLink?.value || '').trim(),
+      imageUrl: (adImage?.value || '').trim(),
+      active: !!adActive?.checked,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
-    adMsg.textContent = 'Saved ✔'; setTimeout(()=>adMsg.textContent='',1500);
-  } catch(e){ adMsg.textContent = e.message; }
-};
+    if (adMsg) { adMsg.textContent = 'Saved ✔'; setTimeout(()=>adMsg.textContent='',1500); }
+    paintPreview();
+  } catch(e){ if (adMsg) adMsg.textContent = e.message; }
+});
 
-/* -------------------- LESSONS (with categories) -------------------- */
+/* -------------------- LESSONS (with category + filter) -------------------- */
 const lessonId       = document.getElementById('lessonId');
 const lessonTitle    = document.getElementById('lessonTitle');
 const lessonSlug     = document.getElementById('lessonSlug');
@@ -88,17 +132,18 @@ const lessonMsg      = document.getElementById('lessonMsg');
 const filterCategory = document.getElementById('filterCategory');  // NEW
 
 function clearLessonForm(){
-  lessonId.value=''; 
-  lessonTitle.value=''; 
-  lessonSlug.value=''; 
-  lessonContent.value='';
-  lessonStatus.value='draft'; 
-  if (lessonCategory) lessonCategory.value='finance'; // default category
-  lessonMsg.textContent='';
+  if (lessonId)       lessonId.value='';
+  if (lessonTitle)    lessonTitle.value='';
+  if (lessonSlug)     lessonSlug.value='';
+  if (lessonContent)  lessonContent.value='';
+  if (lessonStatus)   lessonStatus.value='draft';
+  if (lessonCategory) lessonCategory.value='finance'; // default
+  if (lessonMsg)      lessonMsg.textContent='';
 }
-document.getElementById('newLesson').onclick = clearLessonForm;
+document.getElementById('newLesson')?.addEventListener('click', clearLessonForm);
 
 function renderLessons(rows){
+  if (!lessonsTable) return;
   lessonsTable.innerHTML = '';
   rows.forEach(d=>{
     const tr = document.createElement('tr');
@@ -115,6 +160,7 @@ function renderLessons(rows){
 }
 
 async function listLessons(){
+  if (!lessonsTable) return;
   let q = db.collection('lessons');
   const cat = filterCategory?.value || 'all';
   if (cat !== 'all') q = q.where('category','==',cat);
@@ -136,58 +182,58 @@ filterCategory?.addEventListener('change', listLessons);
 async function loadLesson(id){
   const doc = await db.collection('lessons').doc(id).get();
   const d = doc.data() || {};
-  lessonId.value = doc.id;
-  lessonTitle.value = d.title || '';
-  lessonSlug.value = d.slug || '';
+  if (lessonId)       lessonId.value   = doc.id;
+  if (lessonTitle)    lessonTitle.value= d.title || '';
+  if (lessonSlug)     lessonSlug.value = d.slug || '';
   if (lessonCategory) lessonCategory.value = d.category || 'finance';
-  lessonContent.value = d.content || '';
-  lessonStatus.value = d.status || 'draft';
-  lessonMsg.textContent = 'Loaded';
-  setTimeout(()=>lessonMsg.textContent='',800);
+  if (lessonContent)  lessonContent.value  = d.content || '';
+  if (lessonStatus)   lessonStatus.value   = d.status || 'draft';
+  if (lessonMsg) { lessonMsg.textContent = 'Loaded'; setTimeout(()=>lessonMsg.textContent='',800); }
 }
 
-document.getElementById('saveLesson').onclick = async ()=>{
+document.getElementById('saveLesson')?.addEventListener('click', async ()=>{
   try{
     const payload = {
-      title: (lessonTitle.value||'').trim(),
-      slug: (lessonSlug.value||'').trim().toLowerCase(),
+      title: (lessonTitle?.value||'').trim(),
+      slug: (lessonSlug?.value||'').trim().toLowerCase(),
       category: (lessonCategory?.value || 'finance'),
-      content: lessonContent.value || '',
-      status: lessonStatus.value || 'draft',
+      content: (lessonContent?.value || ''),
+      status: (lessonStatus?.value || 'draft'),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     if (!payload.title || !payload.slug) throw new Error('Title and slug are required');
 
     // Unique slug (global)
-    if (!lessonId.value) {
+    if (!lessonId?.value) {
       const existing = await db.collection('lessons').where('slug','==',payload.slug).limit(1).get();
       if (!existing.empty) throw new Error('Slug already exists');
     }
 
-    let id = lessonId.value;
+    let id = lessonId?.value;
     if (id) {
       await db.collection('lessons').doc(id).set(payload, { merge:true });
     } else {
       const newDoc = await db.collection('lessons').add(payload);
-      id = newDoc.id; lessonId.value = id;
+      id = newDoc.id;
+      if (lessonId) lessonId.value = id;
     }
-    lessonMsg.textContent = 'Saved ✔'; setTimeout(()=>lessonMsg.textContent='',1200);
+    if (lessonMsg) { lessonMsg.textContent = 'Saved ✔'; setTimeout(()=>lessonMsg.textContent='',1200); }
     await listLessons();
-  } catch(e){ 
+  } catch(e){
     console.error(e);
-    lessonMsg.textContent = e.message; 
+    if (lessonMsg) lessonMsg.textContent = e.message;
   }
-};
+});
 
-document.getElementById('deleteLesson').onclick = async ()=>{
-  if (!lessonId.value) { lessonMsg.textContent='Nothing to delete'; return; }
+document.getElementById('deleteLesson')?.addEventListener('click', async ()=>{
+  if (!lessonId?.value) { if (lessonMsg) lessonMsg.textContent='Nothing to delete'; return; }
   if (!confirm('Delete this lesson?')) return;
   await db.collection('lessons').doc(lessonId.value).delete();
   clearLessonForm();
   await listLessons();
-};
+});
 
-/* -------------------- INIT -------------------- */
+// Init after auth
 auth.onAuthStateChanged(async (user)=>{
   if (!(await requireAdmin(user))) return;
   await Promise.all([loadNotice(), loadAd()]);

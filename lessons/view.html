@@ -24,34 +24,81 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
   <script>
-    if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
-    const db = firebase.firestore();
+    <script src="/assets/firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+<script>
+  if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
+  const db = firebase.firestore();
 
-    function getParam(name){
-      const url = new URL(location.href);
-      return url.searchParams.get(name);
+  function getParam(name){
+    const url = new URL(location.href);
+    return url.searchParams.get(name);
+  }
+
+  async function loadAdForCategory(category){
+    const container = document.getElementById('lessonAd');
+    if (!container) return;
+
+    async function getAd(docId){
+      const doc = await db.collection('ads').doc(docId).get();
+      return doc.exists ? doc.data() : null;
     }
 
-    async function loadLesson(){
-      const slug = getParam('slug');
-      const titleEl = document.getElementById('title');
-      const contentEl = document.getElementById('content');
-      if (!slug){ titleEl.textContent = 'Missing slug'; return; }
-      try{
-        const snap = await db.collection('lessons')
-          .where('slug','==',slug)
-          .where('status','==','published')
-          .limit(1).get();
-        if (snap.empty){ titleEl.textContent = 'Lesson not found'; return; }
-        const d = snap.docs[0].data();
-        titleEl.textContent = d.title || slug;
-        // Admin-authored HTML is trusted here
-        contentEl.innerHTML = d.content || '';
-        document.title = (d.title || 'Lesson') + ' — Pennyriser';
-      }catch(e){ titleEl.textContent = e.message; }
+    // Try category-specific first, then generic
+    const tryIds = [
+      category === 'trading' ? 'lesson-trading' : 'lesson-finance',
+      'lesson-generic'
+    ];
+    let ad = null;
+    for (const id of tryIds) {
+      const d = await getAd(id);
+      if (d && d.active) { ad = d; break; }
     }
-    loadLesson();
-  </script>
+    if (!ad) return; // nothing to show
+
+    const a = document.createElement('a');
+    a.className = 'ad-card';
+    a.href = ad.url || '#';
+    a.target = '_blank';
+    a.rel = 'noopener';
+
+    a.innerHTML = `
+      <header>Sponsored</header>
+      ${ad.imageUrl ? `<img src="${ad.imageUrl}" alt="">` : ``}
+      <div class="ad-body">
+        ${ad.headline ? `<h3>${ad.headline}</h3>` : ``}
+        ${ad.body ? `<p>${ad.body}</p>` : ``}
+        <div class="cta">Learn more →</div>
+      </div>
+    `;
+    container.innerHTML = '';
+    container.appendChild(a);
+  }
+
+  async function loadLesson(){
+    const slug = getParam('slug');
+    const titleEl = document.getElementById('title');
+    const contentEl = document.getElementById('content');
+    if (!slug){ titleEl.textContent = 'Missing slug'; return; }
+    try{
+      const snap = await db.collection('lessons')
+        .where('slug','==',slug)
+        .where('status','==','published')
+        .limit(1).get();
+      if (snap.empty){ titleEl.textContent = 'Lesson not found'; return; }
+      const d = snap.docs[0].data();
+      titleEl.textContent = d.title || slug;
+      contentEl.innerHTML = d.content || '';
+      document.title = (d.title || 'Lesson') + ' — Pennyriser';
+
+      // Load an ad for this lesson's category
+      await loadAdForCategory(d.category || 'finance');
+    }catch(e){ titleEl.textContent = e.message; }
+  }
+  loadLesson();
+</script>
+
 
   <script src="/assets/public-data.js"></script>
 </body>
