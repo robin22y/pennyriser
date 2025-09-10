@@ -97,3 +97,5 @@ input, textarea, select { padding: 12px; border-radius: 10px; }
 @media (max-width: 720px){
   .grid-2 { display:block; }
 }
+/* Always respect [hidden] */
+[hidden] { display: none !important; }

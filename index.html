@@ -33,11 +33,11 @@
   <header class="container">
     <div><strong>Pennyriser</strong></div>
     <div id="session" class="small" style="display:flex;gap:8px;align-items:center;">
-      <span id="userGreet"></span>
-      <a id="loginLink" href="/auth/login.html">Log in / Sign up</a>
-      <button id="logoutBtn" class="btn" hidden>Log out</button>
-      <a id="adminLink" class="btn" href="/admin/index.html" hidden>Admin</a>
-    </div>
+  <span id="userGreet"></span>
+  <a id="loginLink" href="/auth/login.html">Log in / Sign up</a>
+  <button id="logoutBtn" class="btn" hidden>Log out</button>
+  <a id="adminLink" class="btn" href="/admin/index.html" hidden>Admin</a>
+</div>
   </header>
 
   <!-- Minimal hero -->
@@ -66,39 +66,58 @@
 
   <!-- Session state: greet + login/logout + admin -->
   <script>
-  (function(){
-    if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
-    const auth = firebase.auth();
-    const db   = firebase.firestore();
+(function(){
+  if (!window.__FIREBASE_CONFIG__ || !window.firebase) return;
+  if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
 
-    const greet     = document.getElementById('userGreet');
-    const loginLink = document.getElementById('loginLink');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const adminLink = document.getElementById('adminLink');
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
 
-    async function updateForUser(user){
-      if (!user) {
-        if (greet) greet.textContent = '';
-        if (loginLink) loginLink.hidden = false;
-        if (logoutBtn) logoutBtn.hidden = true;
-        if (adminLink) adminLink.hidden = true;
-        return;
-      }
-      if (greet) greet.textContent = 'Hi, ' + (user.email || 'friend');
-      if (loginLink) loginLink.hidden = true;
-      if (logoutBtn) logoutBtn.hidden = false;
+  const greet     = document.getElementById('userGreet');
+  const loginLink = document.getElementById('loginLink');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const adminLink = document.getElementById('adminLink');
+
+  // Safe initial state (treat as logged out)
+  if (greet) greet.textContent = '';
+  if (loginLink) loginLink.hidden = false;
+  if (logoutBtn) logoutBtn.hidden = true;
+  if (adminLink) adminLink.hidden = true;
+
+  async function updateForUser(user){
+    if (!user) {
+      if (greet) greet.textContent = '';
+      if (loginLink) loginLink.hidden = false;
+      if (logoutBtn) logoutBtn.hidden = true;
       if (adminLink) adminLink.hidden = true;
-
-      try {
-        const snap = await db.collection('users').doc(user.uid).get();
-        if (snap.exists && snap.data().role === 'admin') adminLink.hidden = false;
-      } catch(e){}
+      return;
     }
 
-    auth.onAuthStateChanged(updateForUser);
-    logoutBtn?.addEventListener('click', async ()=>{ try { await auth.signOut(); } catch(e){} });
-  })();
-  </script>
+    // Logged-in UI
+    if (greet) greet.textContent = 'Hi, ' + (user.email || 'friend');
+    if (loginLink) loginLink.hidden = true;
+    if (logoutBtn) logoutBtn.hidden = false;
+    if (adminLink) adminLink.hidden = true; // keep hidden until role confirmed
+
+    // Show Admin only if role=admin
+    try {
+      const snap = await db.collection('users').doc(user.uid).get();
+      if (snap.exists && snap.data().role === 'admin') {
+        if (adminLink) adminLink.hidden = false;
+      }
+    } catch(e){
+      // ignore; keep admin hidden
+    }
+  }
+
+  auth.onAuthStateChanged(updateForUser);
+
+  logoutBtn?.addEventListener('click', async ()=>{
+    try { await auth.signOut(); } finally { location.reload(); }
+  });
+})();
+</script>
+
 
   <!-- Optional: bottom nav (keeps mobile flow consistent) -->
   <nav class="bottom-nav" role="navigation" aria-label="Primary">
