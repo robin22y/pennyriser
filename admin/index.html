@@ -41,40 +41,60 @@
         <span id="adMsg" class="small"></span>
       </section>
 
-      <!-- LESSONS CMS -->
-      <section class="card" style="margin-top:12px">
-        <h3>Lessons CMS</h3>
+     <!-- LESSONS CMS -->
+<section class="card" style="margin-top:12px">
+  <h3>Lessons CMS</h3>
 
-        <div class="card" style="margin-bottom:12px">
-          <h4>Create / Edit Lesson</h4>
-          <input type="hidden" id="lessonId" />
-          <label>Title</label>
-          <input id="lessonTitle" type="text" placeholder="Asset vs Liability" />
-          <label>Slug (unique, URL-friendly)</label>
-          <input id="lessonSlug" type="text" placeholder="asset-vs-liability" />
-          <label>Content (HTML allowed; keep it simple)</label>
-          <textarea id="lessonContent" rows="8" placeholder="<p>Short lesson body...</p>"></textarea>
-          <label>Status</label>
-          <select id="lessonStatus">
-            <option value="draft">draft</option>
-            <option value="published">published</option>
-          </select>
-          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap">
-            <button class="btn btn-primary" id="saveLesson">Save / Update</button>
-            <button class="btn" id="newLesson">New</button>
-            <button class="btn" id="deleteLesson">Delete</button>
-          </div>
-          <span id="lessonMsg" class="small"></span>
-        </div>
+  <div class="card" style="margin-bottom:12px">
+    <h4>Create / Edit Lesson</h4>
+    <input type="hidden" id="lessonId" />
+    <label>Title</label>
+    <input id="lessonTitle" type="text" placeholder="Asset vs Liability" />
 
-        <div class="card">
-          <h4>All Lessons</h4>
-          <table class="table" style="width:100%">
-            <thead><tr><th>Title</th><th>Slug</th><th>Status</th><th>Updated</th><th></th></tr></thead>
-            <tbody id="lessonsTable"></tbody>
-          </table>
-        </div>
-      </section>
+    <label>Slug (unique, URL-friendly)</label>
+    <input id="lessonSlug" type="text" placeholder="asset-vs-liability" />
+
+    <label>Category</label>
+    <select id="lessonCategory">
+      <option value="finance">Personal Finance</option>
+      <option value="trading">Stock Trading</option>
+    </select>
+
+    <label>Content (HTML allowed; keep it simple)</label>
+    <textarea id="lessonContent" rows="8" placeholder="<p>Short lesson body...</p>"></textarea>
+
+    <label>Status</label>
+    <select id="lessonStatus">
+      <option value="draft">draft</option>
+      <option value="published">published</option>
+    </select>
+
+    <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap">
+      <button class="btn btn-primary" id="saveLesson">Save / Update</button>
+      <button class="btn" id="newLesson">New</button>
+      <button class="btn" id="deleteLesson">Delete</button>
+    </div>
+    <span id="lessonMsg" class="small"></span>
+  </div>
+
+  <div class="card">
+    <h4>All Lessons</h4>
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap">
+      <label>Filter by category
+        <select id="filterCategory">
+          <option value="all">All</option>
+          <option value="finance">Personal Finance</option>
+          <option value="trading">Stock Trading</option>
+        </select>
+      </label>
+    </div>
+    <table class="table" style="width:100%">
+      <thead><tr><th>Title</th><th>Slug</th><th>Category</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+      <tbody id="lessonsTable"></tbody>
+    </table>
+  </div>
+</section>
+
 
       <div style="display:flex; gap:8px; margin-top:16px">
         <a class="btn" href="/">Home</a>
