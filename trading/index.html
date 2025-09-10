@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Learn Stock Trading — Pennyriser</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <style>
+    .center { min-height: 70dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; padding:24px; }
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:12px; }
+  </style>
+</head>
+<body>
+  <header class="container"><h1>Pennyriser</h1></header>
+
+  <main class="center">
+    <span class="pill">Coming soon</span>
+    <h2>Learn Stock Trading</h2>
+    <p>We’re building a beginner-friendly path: risk basics → order types → strategies → practice.</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+      <a class="btn" href="/">Back to Home</a>
+      <a class="btn btn-primary" href="/lessons/index.html">Start Personal Finance</a>
+    </div>
+    <p class="small" style="max-width:560px">
+      Tip: finish Personal Finance first — budgeting, debt, emergency fund, and long-term investing give you the strongest base before trading.
+    </p>
+  </main>
+
+  <footer class="container"><p><strong>Disclaimer:</strong> Educational only. Not financial advice.</p></footer>
+
+  <!-- (Optional) bottom nav for mobile -->
+  <nav class="bottom-nav" role="navigation" aria-label="Primary">
+    <ul>
+      <li><a href="/" data-match="/"><span class="icon">🏠</span><span>Home</span></a></li>
+      <li><a href="/lessons/index.html" data-match="/lessons/"><span class="icon">📚</span><span>Finance</span></a></li>
+      <li><a href="/trading/index.html" data-match="/trading/"><span class="icon">📈</span><span>Trading</span></a></li>
+      <li><a id="bn-login" href="/auth/login.html"><span class="icon">🔑</span><span>Log in</span></a></li>
+      <li><a id="bn-logout" href="/auth/login.html" hidden><span class="icon">🚪</span><span>Log out</span></a></li>
+      <li><a id="bn-admin" href="/admin/index.html" data-match="/admin/" hidden><span class="icon">🛠️</span><span>Admin</span></a></li>
+    </ul>
+  </nav>
+  <script src="/assets/nav.js"></script>
+  <script>
+    // make bottom Log out actually sign out
+    (function(){
+      const btn = document.getElementById('bn-logout');
+      if (!btn) return;
+      btn.addEventListener('click', function(ev){
+        if (!(window.firebase && window.__FIREBASE_CONFIG__)) return;
+        ev.preventDefault();
+        try {
+          if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
+          firebase.auth().signOut().then(()=> location.href='/');
+        } catch(e){ location.href='/'; }
+      });
+    })();
+  </script>
+</body>
+</html>
