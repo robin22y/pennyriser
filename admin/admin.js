@@ -124,12 +124,12 @@ document.getElementById('saveAd')?.addEventListener('click', async ()=>{
 const lessonId       = document.getElementById('lessonId');
 const lessonTitle    = document.getElementById('lessonTitle');
 const lessonSlug     = document.getElementById('lessonSlug');
-const lessonCategory = document.getElementById('lessonCategory');  // NEW
+const lessonCategory = document.getElementById('lessonCategory');
 const lessonContent  = document.getElementById('lessonContent');
 const lessonStatus   = document.getElementById('lessonStatus');
 const lessonsTable   = document.getElementById('lessonsTable');
 const lessonMsg      = document.getElementById('lessonMsg');
-const filterCategory = document.getElementById('filterCategory');  // NEW
+const filterCategory = document.getElementById('filterCategory');
 
 function clearLessonForm(){
   if (lessonId)       lessonId.value='';
