@@ -42,16 +42,14 @@
       return url.searchParams.get(name);
     }
     
-    function checkLoginPrompt(){
+    // Check if the user is not logged in and if the prompt should be shown
+    function checkLoginPrompt(user){
       const promptEl = document.getElementById('loginPrompt');
-      const lessonsViewed = parseInt(localStorage.getItem('lessonsViewed') || 0) + 1;
-      localStorage.setItem('lessonsViewed', lessonsViewed);
-    
-      auth.onAuthStateChanged(user => {
-          if (!user && lessonsViewed >= 3) {
-              promptEl.style.display = 'block';
-          }
-      });
+      const lessonsViewed = parseInt(localStorage.getItem('lessonsViewed') || 0);
+
+      if (!user && lessonsViewed >= 3) {
+          promptEl.style.display = 'block';
+      }
     }
 
     async function loadAdForCategory(category){
@@ -108,8 +106,11 @@
         titleEl.textContent = d.title || slug;
         contentEl.innerHTML = d.content || '';
         document.title = (d.title || 'Lesson') + ' — Pennyriser';
+        
+        // This is the new, corrected logic
+        localStorage.setItem('lessonsViewed', parseInt(localStorage.getItem('lessonsViewed') || 0) + 1);
+        auth.onAuthStateChanged(checkLoginPrompt);
 
-        checkLoginPrompt();
         await loadAdForCategory(d.category || 'finance');
 
       }catch(e){ titleEl.textContent = e.message; }
