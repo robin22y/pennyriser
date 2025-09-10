@@ -31,14 +31,17 @@
 
   <!-- Top bar kept tiny -->
   <header class="container">
+  <div style="display:flex; gap:16px; align-items:center;">
     <div><strong>Pennyriser</strong></div>
-    <div id="session" class="small" style="display:flex;gap:8px;align-items:center;">
-  <span id="userGreet"></span>
-  <a id="loginLink" href="/auth/login.html">Log in / Sign up</a>
-  <button id="logoutBtn" class="btn" hidden>Log out</button>
-  <a id="adminLink" class="btn" href="/admin/index.html" hidden>Admin</a>
-</div>
-  </header>
+    <a class="btn" href="/calculators/mortgage-overpayment.html">Calculator</a>
+  </div>
+  <div id="session" class="small" style="display:flex;gap:8px;align-items:center;">
+    <span id="userGreet"></span>
+    <a id="loginLink" href="/auth/login.html">Log in / Sign up</a>
+    <button id="logoutBtn" class="btn" hidden>Log out</button>
+    <a id="adminLink" class="btn" href="/admin/index.html" hidden>Admin</a>
+  </div>
+</header>
 
   <!-- Minimal hero -->
   <main class="hero">
