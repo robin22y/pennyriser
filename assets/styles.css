@@ -34,3 +34,66 @@ ul{margin:8px 0 8px 18px}
 .next{margin-top:12px}
 .notice-bar, #adBox, .ad { position: relative; z-index: 1; }
 a, .btn { position: relative; z-index: 2; }
+/* --- Mobile-first tweaks --- */
+:root{
+  --safe-bottom: env(safe-area-inset-bottom);
+  --safe-top: env(safe-area-inset-top);
+  --nav-h: 62px;
+}
+
+.container { padding-left: 16px; padding-right: 16px; }
+
+/* Cards & buttons a bit bigger for touch */
+.card { border-radius: 14px; padding: 16px; }
+.btn { padding: 12px 14px; border-radius: 12px; line-height: 1.2; }
+input, textarea, select { padding: 12px; border-radius: 10px; }
+
+/* Grid collapses on small screens */
+@media (max-width: 720px){
+  main .container, .container main { padding-bottom: calc(var(--nav-h) + 20px); }
+  .notice-bar { padding: 10px 12px; font-size: 14px; }
+  .container > .grid-2, 
+  main .container > div[style*="grid-template-columns"] {
+    display: block !important;
+  }
+  header.container { padding-top: calc(8px + var(--safe-top)); }
+}
+
+/* --- Bottom nav --- */
+.bottom-nav {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: var(--nav-h);
+  padding-bottom: max(var(--safe-bottom), 8px);
+  background: #0f172a; /* slate-900 */
+  color: #fff;
+  border-top: 1px solid rgba(255,255,255,.08);
+  display: none; /* default hidden (desktop) */
+  z-index: 999;
+}
+.bottom-nav ul {
+  margin: 0; padding: 0 6px; list-style: none;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+  align-items: end; height: 100%;
+}
+.bottom-nav a {
+  color: #cbd5e1; text-decoration: none; font-size: 11px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 8px 2px; border-radius: 10px;
+}
+.bottom-nav a.active, .bottom-nav a:focus-visible {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+}
+.bottom-nav .icon {
+  width: 22px; height: 22px; display: inline-block;
+}
+
+/* Show bottom nav on small screens only */
+@media (max-width: 720px){
+  .bottom-nav { display: block; }
+}
+.grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+@media (max-width: 720px){
+  .grid-2 { display:block; }
+}
