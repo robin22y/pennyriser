@@ -1,0 +1,5 @@
+# Never commit service account keys
+functions/serviceAccount.json
+
+# Ignore node_modules
+functions/node_modules/
