@@ -31,33 +31,79 @@ const UI = (function(){
   }
 
   function applySeasonal(seasonal){
-    const host = document.getElementById('seasonalCanvas');
-    host.innerHTML = '';
-    host.classList.add('hidden');
-    if(!seasonal || seasonal.theme==='none') return;
-    const nowISO = new Date().toISOString().slice(0,10);
-    if(!isDateInRange(nowISO, seasonal.start, seasonal.end)) return;
+  const host = document.getElementById('seasonalCanvas');
+  host.innerHTML = '';
+  host.classList.add('hidden');
 
-    if(seasonal.theme==='christmas'){
-      host.classList.remove('hidden');
-      startSnow(host);
-      // Optional Santa gif (CSP-safe if hosted on same origin)
-      if(seasonal.santa){
-        const santa = document.createElement('img');
-        santa.src = seasonal.santa; santa.alt='Santa';
-        santa.style.position='fixed'; santa.style.top='20%'; santa.style.left='-200px'; santa.style.height='80px'; santa.style.opacity='.9'; santa.style.zIndex='6';
-        host.appendChild(santa);
-        // simple fly-by
-        let x=-200; const timer=setInterval(()=>{ x+=3; santa.style.left=x+'px'; if(x>window.innerWidth+200){ clearInterval(timer); santa.remove(); } },16);
-      }
-      if(seasonal.message){ renderAnnouncements([{ title: seasonal.message }]); }
-    }
-    if(seasonal.theme==='newyear'){
-      host.classList.remove('hidden');
-      startFireworks(host);
-      if(seasonal.message){ renderAnnouncements([{ title: seasonal.message }]); }
+  if(!seasonal || seasonal.theme==='none') return;
+
+  // Date window check (admin sets these)
+  const nowISO = new Date().toISOString().slice(0,10);
+  const inRange = (start, end) => {
+    const n = new Date(nowISO).getTime();
+    if (start && n < new Date(start).getTime()) return false;
+    if (end && n > new Date(end).getTime()) return false;
+    return true;
+  };
+  if(!inRange(seasonal.start, seasonal.end)) return;
+
+  // Activate overlay
+  host.classList.remove('hidden');
+
+  // Effects per theme
+  const t = seasonal.theme;
+  if (t === 'christmas') {
+    startSnow(host);
+    if (seasonal.santa) {
+      const santa = document.createElement('img');
+      santa.src = seasonal.santa; santa.alt='Santa';
+      santa.style.position='fixed'; santa.style.top='20%'; santa.style.left='-200px';
+      santa.style.height='80px'; santa.style.opacity='.9'; santa.style.zIndex='6';
+      host.appendChild(santa);
+      let x=-200; const timer=setInterval(()=>{ x+=3; santa.style.left=x+'px'; if(x>window.innerWidth+200){ clearInterval(timer); santa.remove(); } },16);
     }
   }
+  else if (t === 'newyear') {
+    startFireworks(host);
+  }
+  else if (t === 'diwali') {
+    // warm fireworks + diya/lantern emoji float
+    startFireworks(host);
+    startEmojiRain(host, ["🪔","🏮","✨"], { interval: 600, size: [18, 28] });
+  }
+  else if (t === 'onam') {
+    // marigold petals
+    startPetals(host, ["#f59e0b","#fbbf24","#fef08a"], { interval: 220 });
+    startEmojiRain(host, ["🌼","🌸"], { interval: 900, size: [18,26] });
+  }
+  else if (t === 'stpatricks') {
+    startEmojiRain(host, ["☘️","🍀"], { interval: 300, size: [18,28] });
+  }
+  else if (t === 'mayday') {
+    startConfetti(host, ["#ef4444"], { interval: 140, countPerBurst: 7 });
+  }
+  else if (t === 'mothersday') {
+    startEmojiRain(host, ["🌷","💖","💐"], { interval: 320, size: [18,30] });
+  }
+  else if (t === 'fathersday') {
+    startEmojiRain(host, ["🎩","🧰","💙"], { interval: 360, size: [18,30] });
+  }
+  else if (t === 'teachersday') {
+    startEmojiRain(host, ["✏️","📚","🧑‍🏫"], { interval: 340, size: [18,28] });
+  }
+  else if (t === 'doctorsday') {
+    startEmojiRain(host, ["⚕️","🩺","❤️‍🩹"], { interval: 340, size: [18,28] });
+  }
+  else if (t === 'nursesday') {
+    startEmojiRain(host, ["🩺","💟","💉"], { interval: 340, size: [18,28] });
+  }
+
+  // Optional banner message
+  if (seasonal.message) {
+    UI.renderAnnouncements([{ title: seasonal.message }]);
+  }
+}
+
 
   function renderAds(ads){
     const bar = document.getElementById('adsBar');
@@ -113,3 +159,90 @@ const UI = (function(){
 
   return { loadSiteConfig, saveSiteConfig, renderAnnouncements, applySeasonal, renderAds };
 })();
+// Emoji rain (generic)
+function startEmojiRain(host, emojis = ["✨"], opts = {}) {
+  const { interval = 400, lifetime = 6000, size = [20, 30] } = opts;
+  const timer = setInterval(() => {
+    const span = document.createElement("span");
+    span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    span.style.position = "fixed";
+    span.style.left = Math.random() * 100 + "vw";
+    span.style.top = "-40px";
+    span.style.fontSize = (size[0] + Math.random() * (size[1] - size[0])) + "px";
+    span.style.filter = "drop-shadow(0 2px 2px rgba(0,0,0,.15))";
+    span.style.zIndex = "5";
+    host.appendChild(span);
+    const drift = (Math.random() * 80) - 40;
+    const dur = lifetime + Math.random() * 2000;
+    span.animate(
+      [{ transform: "translate(0,0)", opacity: 1 },
+       { transform: `translate(${drift}px, ${window.innerHeight + 80}px)`, opacity: 0.9 }],
+      { duration: dur, easing: "linear" }
+    );
+    setTimeout(() => span.remove(), dur + 50);
+  }, interval);
+  host.dataset.emojiTimer = timer;
+}
+
+// Confetti (colored squares/strips)
+function startConfetti(host, colors = ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7"], opts = {}) {
+  const { interval = 120, countPerBurst = 6 } = opts;
+  const timer = setInterval(() => {
+    for (let i = 0; i < countPerBurst; i++) {
+      const d = document.createElement("div");
+      d.style.position = "fixed";
+      d.style.left = Math.random() * 100 + "vw";
+      d.style.top = "-12px";
+      const size = 6 + Math.random() * 6;
+      d.style.width = size + "px";
+      d.style.height = (Math.random() < 0.5 ? size : size * 2) + "px";
+      d.style.background = colors[Math.floor(Math.random() * colors.length)];
+      d.style.borderRadius = Math.random() < 0.2 ? "50%" : "4px";
+      d.style.opacity = "0.95";
+      d.style.zIndex = "5";
+      host.appendChild(d);
+      const drift = (Math.random() * 120) - 60;
+      const dur = 3000 + Math.random() * 3000;
+      d.animate(
+        [
+          { transform: `translate(0,0) rotate(0deg)` },
+          { transform: `translate(${drift}px, ${window.innerHeight + 40}px) rotate(${Math.random()*360}deg)` }
+        ],
+        { duration: dur, easing: "ease-in" }
+      );
+      setTimeout(() => d.remove(), dur + 50);
+    }
+  }, interval);
+  host.dataset.confettiTimer = timer;
+}
+
+// Petal/flower fall (Onam vibe)
+function startPetals(host, colors = ["#fbbf24", "#f59e0b", "#fde68a"], opts = {}) {
+  const { interval = 250 } = opts;
+  const timer = setInterval(() => {
+    const petal = document.createElement("div");
+    const w = 6 + Math.random() * 8, h = 10 + Math.random() * 12;
+    petal.style.position = "fixed";
+    petal.style.left = Math.random() * 100 + "vw";
+    petal.style.top = "-20px";
+    petal.style.width = w + "px";
+    petal.style.height = h + "px";
+    petal.style.background = colors[Math.floor(Math.random() * colors.length)];
+    petal.style.borderRadius = "50% 50% 50% 50% / 60% 60% 40% 40%";
+    petal.style.boxShadow = "0 1px 2px rgba(0,0,0,.15)";
+    petal.style.opacity = "0.95";
+    petal.style.zIndex = "5";
+    host.appendChild(petal);
+    const drift = (Math.random() * 80) - 40;
+    const dur = 5000 + Math.random() * 3000;
+    petal.animate(
+      [
+        { transform: "translate(0,0) rotate(0deg)" },
+        { transform: `translate(${drift}px, ${window.innerHeight + 20}px) rotate(${(Math.random()*2-1)*180}deg)` }
+      ],
+      { duration: dur, easing: "ease-in" }
+    );
+    setTimeout(() => petal.remove(), dur + 50);
+  }, interval);
+  host.dataset.petalTimer = timer;
+}
