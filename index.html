@@ -1,152 +1,135 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pennyriser — Learn Personal Finance, Simply</title>
-  <meta name="description" content="Bite-sized lessons and calculators to master money basics and start investing—clear, practical, no jargon." />
-  <link rel="stylesheet" href="/assets/styles.css" />
-  <style>
-    /* Minimal landing tweaks only */
-    .hero {
-      min-height: calc(100dvh - 140px);
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; gap:14px; padding:24px 16px;
-    }
-    .hero h1 { font-size: clamp(28px, 6vw, 44px); margin: 0; }
-    .hero p  { font-size: clamp(14px, 2.8vw, 18px); color:var(--muted); margin: 0 0 8px; }
-    .cta-row { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px; }
-    .btn.big { padding: 14px 18px; font-size: 16px; border-radius: 12px; }
-    header.container { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; }
-    #session a, #session button { font-size: 14px; }
-    .hero-image { max-width: 600px; width: 80%; height: auto; margin-bottom: 2rem; }
-    .btn.icon-left { display: flex; align-items: center; gap: 8px; }
-  </style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Pennyriser — NEW</title>
+
+  <!-- Strict CSP for Netlify; will be overridden/augmented by netlify.toml on deploy -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self' https://www.gstatic.com https://www.googleapis.com https://www.gstatic.cn;
+                 style-src 'self' 'unsafe-inline';
+                 img-src 'self' data: https:;
+                 frame-src https://s.tradingview.com;
+                 connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://query1.finance.yahoo.com;
+                 base-uri 'none'; form-action 'self'">
+
+  <link rel="stylesheet" href="style.css"/>
+
+  <!-- Firebase SDKs (compat for simplicity) -->
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <!-- OPTIONAL: enable XLSX parsing for .xlsx files (CSV works without this) -->
+  <!-- <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+          integrity=""
+          crossorigin="anonymous"></script> -->
+
+  <script defer src="firebase.js"></script>
+  <script defer src="data.js"></script>
+  <script defer src="rbac.js"></script>
+  <script defer src="app.js"></script>
 </head>
 <body>
-  <div class="notice-bar" role="status" aria-live="polite">
-    <span id="noticeText" class="notice-text">Education only — not financial advice.</span>
-  </div>
-
-  <header class="container">
-    <div style="display:flex; gap:16px; align-items:center;">
-        <div><strong>Pennyriser</strong></div>
-        <a class="btn" href="/calculators/mortgage-overpayment.html">Calculator</a>
+  <header class="topbar">
+    <div class="row">
+      <div class="brand">Pennyriser — Secure Tracker</div>
+      <div class="tags">
+        <span id="encBadge" class="badge">Locked</span>
+        <button id="btnLock" class="btn secondary small">Unlock / Enable</button>
+      </div>
     </div>
-    <div id="session" class="small" style="display:flex;gap:8px;align-items:center;">
-      <span id="userGreet"></span>
-      <a id="loginLink" href="/auth/login.html">Log in / Sign up</a>
-      <button id="logoutBtn" class="btn" hidden>Log out</button>
-      <a id="adminLink" class="btn" href="/admin/index.html" hidden>Admin</a>
+    <div class="row small">
+      <div id="userInfo"></div>
+      <nav class="tabs">
+        <button data-tab="watch">Watchlist</button>
+        <button data-tab="journal">Journal</button>
+        <button data-tab="expenses">Expenses</button>
+        <button data-tab="admin">Admin</button>
+        <button id="btnSignOut" class="btn secondary small" style="margin-left:8px; display:none;">Sign out</button>
+      </nav>
     </div>
   </header>
 
-  <main class="hero">
-    <img src="/assets/hero-placeholder.svg" alt="Pennyriser hero image" class="hero-image" />
-    <h1>Learn money. Simply.</h1>
-    <p>Personal finance, investing & trading—short lessons and practical tools.</p>
-    <div class="cta-row">
-      <a class="btn big btn-primary icon-left" href="/lessons/index.html">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V6.5A2.5 2.5 0 0 0 17.5 4h-11A2.5 2.5 0 0 0 4 6.5v13Z"/><path d="M12 2v4"/><path d="M6 17v-3.5a2.5 2.5 0 0 1 5-1.77L14 15"/><path d="M18 17v-7.5a2.5 2.5 0 0 0-2.5-2.5h-7.85"/></svg>
-        Learn Personal Finance
-      </a>
-      <a class="btn big icon-left" href="/trading/lessons.html">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2"/><path d="M17 14V2l4 4"/><path d="M3 14h18"/><path d="m3 14-4-4"/></svg>
-        Learn Stock Trading
-      </a>
-    </div>
+  <main class="container">
+    <!-- AUTH PANEL -->
+    <section id="authPanel" class="card">
+      <h3>Sign in</h3>
+      <p class="muted">Use Google or Email/Password. Your data is encrypted locally with your passphrase.</p>
+      <div class="grid2">
+        <label>Email <input id="email" placeholder="you@example.com"></label>
+        <label>Passphrase <input id="pass" type="password" placeholder="Encryption passphrase (local key)"></label>
+      </div>
+      <div class="row gap">
+        <input id="pwd" type="password" placeholder="Account password (for Email/Password auth)" style="flex:1;">
+        <button id="emailLogin" class="btn">Email Sign in</button>
+        <button id="emailSignup" class="btn secondary">Email Sign up</button>
+      </div>
+      <div class="row right">
+        <button id="googleLogin" class="btn">Continue with Google</button>
+      </div>
+    </section>
+
+    <!-- WATCHLIST -->
+    <section id="tab-watch" class="hidden">
+      <div class="card row between">
+        <h3>Watchlist</h3>
+        <div class="row gap">
+          <button id="btnAddTicker" class="btn">Add Ticker</button>
+          <button id="btnRefreshQuotes" className="btn secondary">Refresh Prices</button>
+        </div>
+      </div>
+      <div id="watchTable" class="card scroll"></div>
+    </section>
+
+    <!-- JOURNAL -->
+    <section id="tab-journal" class="hidden">
+      <div class="card row between">
+        <h3>Journal</h3>
+        <div class="row gap">
+          <button id="btnNewEntry" class="btn">New Entry</button>
+          <button id="btnImportTrades" class="btn secondary">Import Trades</button>
+        </div>
+      </div>
+      <div id="journalTable" class="card scroll"></div>
+    </section>
+
+    <!-- EXPENSES -->
+    <section id="tab-expenses" class="hidden">
+      <div class="card row between">
+        <h3>Expenses</h3>
+        <div class="row gap">
+          <button id="btnAddExpense" class="btn">Add Expense</button>
+          <button id="btnImportExpenses" class="btn secondary">Import Expenses</button>
+        </div>
+      </div>
+      <div id="expenseSummary" class="card"></div>
+      <div id="expenseTable" class="card scroll"></div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="tab-admin" class="hidden">
+      <div class="card">
+        <h3>Admin</h3>
+        <p class="muted">Toggle features per user (RBAC via Firebase custom claims).</p>
+        <div id="adminUsers"></div>
+      </div>
+    </section>
   </main>
 
-  <footer class="container">
-    <p><strong>Disclaimer:</strong> Educational only. Not financial advice.</p>
+  <!-- Modals -->
+  <dialog id="modal">
+    <div id="modalContent"></div>
+    <div class="row right gap">
+      <button id="modalCancel" class="btn secondary">Cancel</button>
+      <button id="modalOk" class="btn">OK</button>
+    </div>
+  </dialog>
+
+  <footer class="foot">
+    <small>Local-first • AES-GCM encrypted • Firebase Auth/Firestore • RBAC via custom claims • Yahoo quotes • TradingView chart</small>
   </footer>
-
-  <script src="/assets/firebase-config.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
-
-  <script src="/assets/public-data.js"></script>
-
-  <script>
-(function(){
-  if (!window.__FIREBASE_CONFIG__ || !window.firebase) return;
-  if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
-
-  const auth = firebase.auth();
-  const db   = firebase.firestore();
-
-  const greet     = document.getElementById('userGreet');
-  const loginLink = document.getElementById('loginLink');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const adminLink = document.getElementById('adminLink');
-
-  // Safe initial state (treat as logged out)
-  if (greet) greet.textContent = '';
-  if (loginLink) loginLink.hidden = false;
-  if (logoutBtn) logoutBtn.hidden = true;
-  if (adminLink) adminLink.hidden = true;
-
-  async function updateForUser(user){
-    if (!user) {
-      if (greet) greet.textContent = '';
-      if (loginLink) loginLink.hidden = false;
-      if (logoutBtn) logoutBtn.hidden = true;
-      if (adminLink) adminLink.hidden = true;
-      return;
-    }
-
-    // Logged-in UI
-    if (greet) greet.textContent = 'Hi, ' + (user.email || 'friend');
-    if (loginLink) loginLink.hidden = true;
-    if (logoutBtn) logoutBtn.hidden = false;
-    if (adminLink) adminLink.hidden = true; // keep hidden until role confirmed
-
-    // Show Admin only if role=admin
-    try {
-      const snap = await db.collection('users').doc(user.uid).get();
-      if (snap.exists && snap.data().role === 'admin') {
-        if (adminLink) adminLink.hidden = false;
-      }
-    } catch(e){
-      // ignore; keep admin hidden
-    }
-  }
-
-  auth.onAuthStateChanged(updateForUser);
-
-  logoutBtn?.addEventListener('click', async ()=>{
-    try { await auth.signOut(); } finally { location.reload(); }
-  });
-})();
-</script>
-
-
-  <nav class="bottom-nav" role="navigation" aria-label="Primary">
-    <ul>
-      <li><a href="/" data-match="/"><span class="icon">🏠</span><span>Home</span></a></li>
-      <li><a href="/lessons/index.html" data-match="/lessons/"><span class="icon">📚</span><span>Lessons</span></a></li>
-      <li><a href="/calculators/mortgage-overpayment.html" data-match="/calculators/"><span class="icon">🧮</span><span>Calculator</span></a></li>
-      <li><a id="bn-login" href="/auth/login.html"><span class="icon">🔑</span><span>Log in</span></a></li>
-      <li><a id="bn-logout" href="/auth/login.html" hidden><span class="icon">🚪</span><span>Log out</span></a></li>
-      <li><a id="bn-admin" href="/admin/index.html" data-match="/admin/" hidden><span class="icon">🛠️</span><span>Admin</span></a></li>
-    </ul>
-  </nav>
-  <script src="/assets/nav.js"></script>
-  <script>
-    // Make bottom "Log out" actually sign out
-    (function(){
-      const btn = document.getElementById('bn-logout');
-      if (!btn) return;
-      btn.addEventListener('click', function(ev){
-        if (!(window.firebase && window.__FIREBASE_CONFIG__)) return;
-        ev.preventDefault();
-        try {
-          if (!firebase.apps.length) firebase.initializeApp(window.__FIREBASE_CONFIG__);
-          firebase.auth().signOut().then(()=> location.href='/');
-        } catch(e){ location.href='/'; }
-      });
-    })();
-  </script>
 </body>
 </html>
