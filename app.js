@@ -1,13 +1,38 @@
-const $ = sel => document.querySelector(sel);
-await DTT.unlock(user.uid, pass);
-$('#authPanel').classList.add('hidden');
-$('#userInfo').textContent = `${user.email||'Google account'} — ${currentRBAC.role}`;
-await loadAllLocal();
-await __ADMIN__.refreshPublicStrips();
-render(); showTab('watch');
-};
-window.onSignedOut = ()=>{ currentUser=null; $('#authPanel').classList.remove('hidden'); showOnly('#authPanel'); };
+// app.js — TOP OF FILE (replace your first ~20 lines with this)
 
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+let currentUser = null;
+let currentRBAC = { role:'user', permissions:{ expenses:true, uploads:true, charts:true } };
+let state = { tickers:[], journal:[], expenses:[], prices:{} };
+
+// ✅ All awaits moved inside this async function (no top-level await)
+window.onSignedIn = async (user, claims) => {
+  currentUser = user;
+  currentRBAC = await RBAC.current();
+
+  // unlock prompt (encryption key)
+  const pass = $('#pass').value.trim() || prompt('Enter passphrase to unlock your encrypted data');
+  if (!pass){ alert('Passphrase required.'); return; }
+  await DTT.unlock(user.uid, pass);
+
+  // UI + data
+  $('#authPanel').classList.add('hidden');
+  $('#userInfo').textContent = `${user.email || 'Google account'} — ${currentRBAC.role}`;
+
+  await loadAllLocal();
+  await __ADMIN__.refreshPublicStrips();
+
+  render();
+  showTab('watch');
+};
+
+window.onSignedOut = () => {
+  currentUser = null;
+  $('#authPanel').classList.remove('hidden');
+  showOnly('#authPanel');
+};
 
 document.addEventListener('DOMContentLoaded', ()=>{
 DTT.setBadgeRef($('#encBadge'), $('#btnLock')); $('#btnLock').onclick=()=> DTT.lock();
