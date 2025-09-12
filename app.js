@@ -84,6 +84,7 @@ function renderWatch(){
     const key = t.ticker+'|'+t.market;
     const q = state.prices[key];
     const live = q && q.price!=null ? `${q.price.toFixed(2)} ${q.currency||''}` : '—';
+    // NOTE: no inline onclick; use data-* and delegate below
     return `<tr>
       <td><b>${t.ticker}</b> <small class="muted">(${t.market})</small></td>
       <td>${t.theme||''}</td>
@@ -96,9 +97,9 @@ function renderWatch(){
       <td>${t.rs||''}</td>
       <td>${t.notes||''}</td>
       <td class="right">
-        <button class="btn secondary small" onclick="openChart('${t.ticker}','${t.market}')">Chart</button>
-        <button class="btn secondary small" onclick="editTicker('${t.id}')">Edit</button>
-        <button class="btn secondary small" onclick="delTicker('${t.id}')">Del</button>
+        <button class="btn secondary small" data-act="chart" data-ticker="${t.ticker}" data-market="${t.market}">Chart</button>
+        <button class="btn secondary small" data-act="edit" data-id="${t.id}">Edit</button>
+        <button class="btn secondary small" data-act="del" data-id="${t.id}">Del</button>
       </td>
     </tr>`;
   }).join('');
@@ -106,6 +107,16 @@ function renderWatch(){
     <thead><tr><th>Ticker</th><th>Theme</th><th>Tier</th><th>Stage</th><th>Live</th><th>BO</th><th>Stop</th><th>Targets</th><th>RS</th><th>Notes</th><th></th></tr></thead>
     <tbody>${rows || '<tr><td colspan="11">No tickers</td></tr>'}</tbody>
   </table>`;
+
+  // Delegate button clicks (CSP-safe)
+  el.onclick = (e)=>{
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === 'chart') openChart(btn.dataset.ticker, btn.dataset.market);
+    else if (act === 'edit') editTicker(btn.dataset.id);
+    else if (act === 'del') delTicker(btn.dataset.id);
+  };
 }
 
 function addTickerModal(){
@@ -148,15 +159,18 @@ async function refreshQuotes(){
   await Promise.all(list.map(async t=>{
     const key = t.ticker+'|'+t.market;
     const sym = DTT.yfSymbol(t.ticker, t.market);
-    const q = await DTT.fetchQuote(sym);
-    if (q) state.prices[key] = q;
+    if (!sym) return;              // guard against empty symbols
+    try{
+      const q = await DTT.fetchQuote(sym);
+      if (q) state.prices[key] = q;
+    }catch{ /* ignore per-row errors */ }
   }));
   renderWatch();
 }
 
 function openChart(ticker, market){
   if (!currentRBAC.permissions.charts) return alert('Chart access disabled by admin.');
-  const tvSym = market==='IN' ? `NSE:${ticker.replace(/\\.NS|\\.BO/i,'')}` : `NASDAQ:${ticker}`;
+  const tvSym = market==='IN' ? `NSE:${ticker.replace(/\.NS|\.BO/i,'')}` : `NASDAQ:${ticker}`;
   modalOpen({ title: `${ticker} — Chart`, body: `
     <div class="card">
       <iframe title="tv" style="width:100%;height:420px;border:1px solid #e2e8f0;border-radius:12px"
@@ -350,6 +364,44 @@ function guessCategory(desc){
 }
 
 // ====== EXPENSES ======
+function addExpenseModal(){
+  modalOpen({
+    title: 'Add Expense',
+    body: `
+      <div class="grid2">
+        <label>Date <input id="e_date" type="date" value="${new Date().toISOString().slice(0,10)}"></label>
+        <label>Merchant <input id="e_merchant" placeholder="Store / Description"></label>
+        <label>Category 
+          <select id="e_category">
+            <option>Groceries</option><option>Dining</option><option>Transport</option>
+            <option>Shopping</option><option>Bills</option><option>Health</option>
+            <option>Entertainment</option><option>Travel</option><option>Other</option>
+          </select>
+        </label>
+        <label>Account <input id="e_account" placeholder="Bank / Card"></label>
+        <label>Amount <input id="e_amount" type="number" step="0.01" placeholder="Positive for spend, negative for income"></label>
+        <label>Notes <input id="e_notes" placeholder="Optional notes"></label>
+      </div>
+    `,
+    onOk: async () => {
+      const e = {
+        id: DTT.uid(),
+        date: document.getElementById('e_date').value,
+        merchant: document.getElementById('e_merchant').value || 'Misc',
+        category: document.getElementById('e_category').value || 'Other',
+        account: document.getElementById('e_account').value || '',
+        amount: Number(document.getElementById('e_amount').value || 0),
+        notes: document.getElementById('e_notes').value || ''
+      };
+      state.expenses.unshift(e);
+      await saveLocal('expenses');
+      renderExpenses();
+    }
+  });
+}
+// Ensure availability for early listeners in some environments
+window.addExpenseModal = addExpenseModal;
+
 function renderExpenses(){
   const month = new Date().toISOString().slice(0,7);
   const list = state.expenses.filter(e=> (e.date||'').startsWith(month));

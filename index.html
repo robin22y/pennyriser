@@ -5,27 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <title>Pennyriser — NEW</title>
 
-  <!-- Strict CSP for Netlify; will be overridden/augmented by netlify.toml on deploy -->
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self';
-                 script-src 'self' https://www.gstatic.com https://www.googleapis.com https://www.gstatic.cn;
-                 style-src 'self' 'unsafe-inline';
-                 img-src 'self' data: https:;
-                 frame-src https://s.tradingview.com;
-                 connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://query1.finance.yahoo.com;
-                 base-uri 'none'; form-action 'self'">
+      content="default-src 'self';
+               script-src 'self' https://www.gstatic.com https://www.googleapis.com https://www.gstatic.cn;
+               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+               style-src-elem 'self' https://fonts.googleapis.com;
+               font-src 'self' https://fonts.gstatic.com data:;
+               img-src 'self' data: https:;
+               frame-src https://s.tradingview.com;
+               connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com;
+               base-uri 'none'; form-action 'self'">
+
 
   <link rel="stylesheet" href="style.css"/>
 
-  <!-- Firebase SDKs (compat for simplicity) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-  <!-- OPTIONAL: enable XLSX parsing for .xlsx files (CSV works without this) -->
-  <!-- <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
-          integrity=""
-          crossorigin="anonymous"></script> -->
 
   <script defer src="firebase.js"></script>
   <script defer src="data.js"></script>
@@ -37,14 +37,14 @@
     <div class="row">
       <div class="brand">Pennyriser — Secure Tracker</div>
       <div class="tags">
-        <span id="encBadge" class="badge">Locked</span>
+        <span id="encBadge" class="badge locked">Locked</span>
         <button id="btnLock" class="btn secondary small">Unlock / Enable</button>
       </div>
     </div>
     <div class="row small">
       <div id="userInfo"></div>
       <nav class="tabs">
-        <button data-tab="watch">Watchlist</button>
+        <button data-tab="watch" class="active">Watchlist</button>
         <button data-tab="journal">Journal</button>
         <button data-tab="expenses">Expenses</button>
         <button data-tab="admin">Admin</button>
@@ -54,7 +54,6 @@
   </header>
 
   <main class="container">
-    <!-- AUTH PANEL -->
     <section id="authPanel" class="card">
       <h3>Sign in</h3>
       <p class="muted">Use Google or Email/Password. Your data is encrypted locally with your passphrase.</p>
@@ -72,8 +71,7 @@
       </div>
     </section>
 
-    <!-- WATCHLIST -->
-    <section id="tab-watch" class="hidden">
+    <section id="tab-watch">
       <div class="card row between">
         <h3>Watchlist</h3>
         <div class="row gap">
@@ -84,7 +82,6 @@
       <div id="watchTable" class="card scroll"></div>
     </section>
 
-    <!-- JOURNAL -->
     <section id="tab-journal" class="hidden">
       <div class="card row between">
         <h3>Journal</h3>
@@ -96,7 +93,6 @@
       <div id="journalTable" class="card scroll"></div>
     </section>
 
-    <!-- EXPENSES -->
     <section id="tab-expenses" class="hidden">
       <div class="card row between">
         <h3>Expenses</h3>
@@ -109,7 +105,6 @@
       <div id="expenseTable" class="card scroll"></div>
     </section>
 
-    <!-- ADMIN -->
     <section id="tab-admin" class="hidden">
       <div class="card">
         <h3>Admin</h3>
@@ -119,10 +114,9 @@
     </section>
   </main>
 
-  <!-- Modals -->
   <dialog id="modal">
     <div id="modalContent"></div>
-    <div class="row right gap">
+    <div class="row right gap" style="margin-top:24px;">
       <button id="modalCancel" class="btn secondary">Cancel</button>
       <button id="modalOk" class="btn">OK</button>
     </div>
