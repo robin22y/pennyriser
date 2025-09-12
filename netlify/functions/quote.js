@@ -1,36 +1,60 @@
 // netlify/functions/quote.js
-export async function handler(event) {
-  try {
-    const symbol = (event.queryStringParameters.symbol || '').trim();
-    if (!symbol) return resp(400, { error: 'Missing ?symbol=' });
+// Proxies Yahoo Finance quote API and returns a minimal, CORS-safe payload.
 
-    const url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(symbol);
-    const r = await fetch(url);
-    if (!r.ok) return resp(r.status, { error: 'Upstream error ' + r.status });
-    const data = await r.json();
-    const q = data?.quoteResponse?.result?.[0];
-    if (!q) return resp(404, { error: 'No quote' });
-
-    const price = q.regularMarketPrice ?? q.postMarketPrice ?? q.preMarketPrice ?? null;
-    return resp(200, {
-      symbol: q.symbol,
-      name: q.shortName || q.longName || q.symbol,
-      currency: q.currency || '',
-      exchange: q.fullExchangeName || '',
-      price
-    });
-  } catch (e) {
-    return resp(500, { error: e.message || String(e) });
+exports.handler = async (event) => {
+  const symbol = (event.queryStringParameters?.symbol || '').trim();
+  if (!symbol) {
+    return json(400, { error: 'Missing symbol' });
   }
-}
-function resp(status, body) {
+
+  try {
+    // Yahoo supports multiple symbols comma-separated, but we use one here.
+    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
+    const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!resp.ok) {
+      return json(resp.status, { error: `Upstream error ${resp.status}` });
+    }
+
+    const raw = await resp.json();
+    const r = raw?.quoteResponse?.result?.[0];
+    if (!r) {
+      return json(404, { error: 'Symbol not found', symbol });
+    }
+
+    const payload = {
+      symbol: r.symbol,
+      name: r.shortName || r.longName || r.displayName || r.symbol,
+      currency: r.currency || null,
+      exchange: r.fullExchangeName || r.exchange || null,
+      price:
+        typeof r.regularMarketPrice === 'number'
+          ? r.regularMarketPrice
+          : typeof r.postMarketPrice === 'number'
+          ? r.postMarketPrice
+          : typeof r.preMarketPrice === 'number'
+          ? r.preMarketPrice
+          : null,
+      ts: r.regularMarketTime || null,
+    };
+
+    return json(200, payload, {
+      // Cache a little to keep things snappy; tweak as you like.
+      'Cache-Control': 'public, max-age=30',
+    });
+  } catch (err) {
+    return json(500, { error: err.message || 'Unknown error' });
+  }
+};
+
+// Small helper to emit JSON with useful headers.
+function json(statusCode, body, extraHeaders = {}) {
   return {
-    statusCode: status,
+    statusCode,
+    body: JSON.stringify(body),
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Origin': '*', // safe for same-origin; also handy for local previews
+      ...extraHeaders,
     },
-    body: JSON.stringify(body)
   };
 }
