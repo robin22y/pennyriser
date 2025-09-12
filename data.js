@@ -52,3 +52,14 @@ const DTT = (()=>{
   function uid(){ return Math.random().toString(36).slice(2,9); }
   return { encSave, encLoad, unlock, lock, fetchQuote, yfSymbol, uid, setBadgeRef:(b,btn)=>{encBadgeEl=b; lockBtnEl=btn; setBadge();} };
 })();
+async function fetchQuote(symbol){
+  if (!symbol) return null;
+  try{
+    const base = (typeof window !== 'undefined' && localStorage.getItem('FN_BASE')) || '';
+    const url = `${base}/.netlify/functions/quote?symbol=${encodeURIComponent(symbol)}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data && typeof data.price === 'number') ? data : null;
+  }catch{ return null; }
+}
