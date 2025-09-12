@@ -1,17 +1,7 @@
 
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{database}/documents {
-
-    // Users own subcollections
-    match /users/{userId}/{collection=**}/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Optional: Admin-only profile updates (if you store a profile doc at users/{uid})
-    match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.token.role == 'admin';
-    }
-  }
-}
+match /databases/{database}/documents {
+// Per-user encrypted blobs remain private
+match /users/{uid}/{coll}/{doc} {
+allow read, write: if request.auth !

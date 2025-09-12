@@ -1,99 +1,100 @@
+index.html
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>Pennyriser — NEW</title>
+  <title>Pennyriser</title>
 
+  <!-- CSP header will also be set via netlify.toml; keep this meta for local dev parity -->
   <meta http-equiv="Content-Security-Policy"
-      content="default-src 'self';
-               script-src 'self' https://www.gstatic.com https://www.googleapis.com https://www.gstatic.cn;
-               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-               style-src-elem 'self' https://fonts.googleapis.com;
-               font-src 'self' https://fonts.gstatic.com data:;
-               img-src 'self' data: https:;
-               frame-src https://s.tradingview.com;
-               connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com;
-               base-uri 'none'; form-action 'self'">
-
-
-  <link rel="stylesheet" href="style.css"/>
+        content="default-src 'self';
+                 script-src 'self' https://www.gstatic.com https://www.googleapis.com https://apis.google.com https://cdn.jsdelivr.net;
+                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+                 style-src-elem 'self' https://fonts.googleapis.com;
+                 font-src 'self' https://fonts.gstatic.com data:;
+                 img-src 'self' data: https:;
+                 frame-src https://s.tradingview.com https://accounts.google.com https://apis.google.com;
+                 connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com;
+                 base-uri 'none'; form-action 'self'">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"/>
 
+  <!-- Firebase (compat) -->
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
+  <!-- SheetJS for XLS/XLSX import -->
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Optional: point to deployed functions while running without netlify dev -->
+  <script>/* window.FN_BASE = "https://<your-site>.netlify.app"; */</script>
+
   <script defer src="firebase.js"></script>
   <script defer src="data.js"></script>
   <script defer src="rbac.js"></script>
+  <script defer src="ui.js"></script>
+  <script defer src="admin.js"></script>
   <script defer src="app.js"></script>
-  <script>
-  // When running without netlify dev, set this to your live site origin:
-  // window.FN_BASE = "https://<your-site>.netlify.app";
-</script>
-
 </head>
 <body>
   <header class="topbar">
-    <div class="row">
-      <div class="brand">Pennyriser — Secure Tracker</div>
-      <div class="tags">
+    <div class="row between">
+      <div class="brand" id="homeBtn">Pennyriser</div>
+      <nav class="tabs">
+        <button data-tab="watch" class="active">Home</button>
+        <button data-tab="journal">Journal</button>
+        <button data-tab="expenses">Expenses</button>
+        <button data-tab="admin">Admin</button>
+        <button id="btnSignOut" class="btn secondary small" style="display:none;">Sign out</button>
+      </nav>
+    </div>
+    <div class="row between small">
+      <div id="userInfo" class="muted"></div>
+      <div class="row gap">
         <span id="encBadge" class="badge locked">Locked</span>
         <button id="btnLock" class="btn secondary small">Unlock / Enable</button>
       </div>
     </div>
-    <div class="row small">
-      <div id="userInfo"></div>
-      <nav class="tabs">
-        <button data-tab="watch" class="active">Watchlist</button>
-        <button data-tab="journal">Journal</button>
-        <button data-tab="expenses">Expenses</button>
-        <button data-tab="admin">Admin</button>
-        <button id="btnSignOut" class="btn secondary small" style="margin-left:8px; display:none;">Sign out</button>
-      </nav>
-    </div>
   </header>
 
+  <!-- Announcement / Seasonal / Ads strips -->
+  <section id="announcementBar" class="strip hidden"></section>
+  <section id="seasonalCanvas" class="seasonal hidden" aria-hidden="true"></section>
+  <section id="adsBar" class="strip hidden"></section>
+
+  <!-- Auth -->
   <main class="container">
-   <section id="authPanel" class="card auth">
-  <h2 class="auth__title">Welcome to Pennyriser</h2>
-  <p class="muted">Sign in with your account. Your data is encrypted locally with your passphrase.</p>
-
-  <div id="authError" class="auth__error hidden"></div>
-
-  <div class="auth__form">
-    <label>Email
-      <input id="email" inputmode="email" autocomplete="email" placeholder="you@example.com">
-    </label>
-
-    <label>Password
-      <div class="pw">
-        <input id="pwd" type="password" autocomplete="current-password" placeholder="Account password">
-        <button id="togglePwd" class="pw__toggle" type="button" aria-label="Show password">👁️</button>
+    <section id="authPanel" class="card auth">
+      <h2>Welcome to Pennyriser</h2>
+      <p class="muted">Sign in with your account. Your data is encrypted locally with your passphrase.</p>
+      <div id="authError" class="auth__error hidden"></div>
+      <div class="auth__form">
+        <label>Email <input id="email" inputmode="email" autocomplete="email" placeholder="you@example.com"></label>
+        <label>Password
+          <div class="pw">
+            <input id="pwd" type="password" autocomplete="current-password" placeholder="Account password">
+            <button id="togglePwd" class="pw__toggle" type="button" aria-label="Show password">👁️</button>
+          </div>
+        </label>
+        <label>Encryption passphrase
+          <input id="pass" type="password" autocomplete="new-password" placeholder="Used to unlock your local data">
+        </label>
+        <div class="auth__actions">
+          <button id="emailLogin" class="btn auth__cta">Sign in</button>
+          <button id="emailSignup" class="btn secondary auth__cta">Create account</button>
+        </div>
+        <div class="auth__sep"><span>or</span></div>
+        <button id="googleLogin" class="btn auth__google">Continue with Google</button>
       </div>
-    </label>
+    </section>
 
-    <label>Encryption passphrase
-      <input id="pass" type="password" autocomplete="new-password" placeholder="Used to unlock your local data">
-    </label>
-
-    <div class="auth__actions">
-      <button id="emailLogin" class="btn auth__cta">Sign in</button>
-      <button id="emailSignup" class="btn secondary auth__cta">Create account</button>
-    </div>
-
-    <div class="auth__sep"><span>or</span></div>
-    <button id="googleLogin" class="btn auth__google">Continue with Google</button>
-  </div>
-</section>
-
-
-
-    <section id="tab-watch">
+    <!-- Watchlist -->
+    <section id="tab-watch" class="hidden">
       <div class="card row between">
         <h3>Watchlist</h3>
         <div class="row gap">
@@ -104,6 +105,7 @@
       <div id="watchTable" class="card scroll"></div>
     </section>
 
+    <!-- Journal -->
     <section id="tab-journal" class="hidden">
       <div class="card row between">
         <h3>Journal</h3>
@@ -115,6 +117,7 @@
       <div id="journalTable" class="card scroll"></div>
     </section>
 
+    <!-- Expenses -->
     <section id="tab-expenses" class="hidden">
       <div class="card row between">
         <h3>Expenses</h3>
@@ -127,11 +130,46 @@
       <div id="expenseTable" class="card scroll"></div>
     </section>
 
+    <!-- Admin -->
     <section id="tab-admin" class="hidden">
       <div class="card">
-        <h3>Admin</h3>
-        <p class="muted">Toggle features per user (RBAC via Firebase custom claims).</p>
-        <div id="adminUsers"></div>
+        <h3>Admin Console</h3>
+        <p class="muted">Manage announcements, seasonal themes, and ads. (Admins only)</p>
+        <div class="grid2">
+          <div class="card soft">
+            <h4>Announcements</h4>
+            <div class="row gap">
+              <button id="annAdd" class="btn small">Add</button>
+              <button id="annRefresh" class="btn secondary small">Refresh</button>
+            </div>
+            <div id="annList" class="stack"></div>
+          </div>
+          <div class="card soft">
+            <h4>Seasonal Theme</h4>
+            <label>Active Theme
+              <select id="seasonTheme">
+                <option value="none">None</option>
+                <option value="christmas">Christmas (Snow + Santa)</option>
+                <option value="newyear">New Year (Fireworks)</option>
+              </select>
+            </label>
+            <label>Start Date <input id="seasonStart" type="date"></label>
+            <label>End Date <input id="seasonEnd" type="date"></label>
+            <label>Custom Message <input id="seasonMsg" placeholder="Happy Holidays!"></label>
+            <div class="row gap">
+              <button id="seasonSave" class="btn small">Save</button>
+              <button id="seasonPreview" class="btn secondary small">Preview</button>
+            </div>
+          </div>
+        </div>
+        <div class="card soft">
+          <h4>Ads</h4>
+          <div class="row gap">
+            <button id="adAdd" class="btn small">Add</button>
+            <button id="adRefresh" class="btn secondary small">Refresh</button>
+          </div>
+          <div id="adList" class="stack"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -145,7 +183,7 @@
   </dialog>
 
   <footer class="foot">
-    <small>Local-first • AES-GCM encrypted • Firebase Auth/Firestore • RBAC via custom claims • Yahoo quotes • TradingView chart</small>
+    <small>Local‑first • AES‑GCM encrypted • Firebase Auth/Firestore • RBAC via custom claims • Quotes via Netlify Functions</small>
   </footer>
 </body>
 </html>

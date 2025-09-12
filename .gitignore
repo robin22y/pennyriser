@@ -3,3 +3,6 @@ functions/serviceAccount.json
 
 # Ignore node_modules
 functions/node_modules/
+
+# Local Netlify folder
+.netlify
