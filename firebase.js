@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initFirebase(){
-  // TODO: Replace with your Firebase config from the console
   const firebaseConfig = {
     apiKey: "AIzaSyCYFsmSWqZV583BFoUAOhOHge-iIZMgIuc",
     authDomain: "pennyriser-7c1a9.firebaseapp.com",
@@ -26,21 +25,57 @@ function initFirebase(){
   firebaseAuth = firebase.auth();
   firebaseDb = firebase.firestore();
 
-  // Auth UI wiring
-  document.getElementById('googleLogin').onclick = async () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await firebaseAuth.signInWithPopup(provider);
+  // --- Auth UI wiring (with UX guards + errors) ---
+  const loginBtn = document.getElementById('emailLogin');
+  const signupBtn = document.getElementById('emailSignup');
+  const googleBtn = document.getElementById('googleLogin');
+
+  googleBtn.onclick = async () => {
+    clearAuthError();
+    disableAuthButtons(true);
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await firebaseAuth.signInWithPopup(provider);
+    } catch (e) {
+      showAuthError(niceFirebaseError(e));
+    } finally {
+      disableAuthButtons(false);
+    }
   };
-  document.getElementById('emailLogin').onclick = async () => {
+
+  loginBtn.onclick = async () => {
+    clearAuthError();
     const email = document.getElementById('email').value.trim();
     const pwd = document.getElementById('pwd').value.trim();
-    await firebaseAuth.signInWithEmailAndPassword(email, pwd);
+    if (!email || !pwd) return showAuthError('Please enter email and password.');
+    disableAuthButtons(true);
+    try {
+      await firebaseAuth.signInWithEmailAndPassword(email, pwd);
+      // onAuthStateChanged will take over
+    } catch (e) {
+      showAuthError(niceFirebaseError(e));
+    } finally {
+      disableAuthButtons(false);
+    }
   };
-  document.getElementById('emailSignup').onclick = async () => {
+
+  signupBtn.onclick = async () => {
+    clearAuthError();
     const email = document.getElementById('email').value.trim();
     const pwd = document.getElementById('pwd').value.trim();
-    await firebaseAuth.createUserWithEmailAndPassword(email, pwd);
+    if (!email || !pwd) return showAuthError('Please enter email and a password (min 6 chars).');
+    if (pwd.length < 6) return showAuthError('Password must be at least 6 characters.');
+    disableAuthButtons(true);
+    try {
+      await firebaseAuth.createUserWithEmailAndPassword(email, pwd);
+      // auto-sign-in; onAuthStateChanged will run
+    } catch (e) {
+      showAuthError(niceFirebaseError(e));
+    } finally {
+      disableAuthButtons(false);
+    }
   };
+
   document.getElementById('btnSignOut').onclick = () => firebaseAuth.signOut();
 
   // Auth state
@@ -82,3 +117,42 @@ async function loadAll(col){
 }
 
 window.PENNY_FIREBASE = { getClaims, saveEncrypted, loadAll, userCol };
+
+// ---------- Auth helpers (UI) ----------
+function disableAuthButtons(disabled){
+  ['emailLogin','emailSignup','googleLogin'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el){
+      el.disabled = disabled;
+      el.style.opacity = disabled ? '0.7' : '1';
+      el.style.pointerEvents = disabled ? 'none' : 'auto';
+    }
+  });
+}
+function showAuthError(msg){
+  const box = document.getElementById('authError');
+  if (!box) return alert(msg); // fallback
+  box.textContent = msg;
+  box.classList.remove('hidden');
+}
+function clearAuthError(){
+  const box = document.getElementById('authError');
+  if (!box) return;
+  box.textContent = '';
+  box.classList.add('hidden');
+}
+function niceFirebaseError(e){
+  const code = e?.code || '';
+  const map = {
+    'auth/invalid-email': 'That email address looks invalid.',
+    'auth/user-not-found': 'No account found with that email.',
+    'auth/wrong-password': 'Incorrect password.',
+    'auth/email-already-in-use': 'This email is already registered.',
+    'auth/weak-password': 'Password is too weak (min 6 chars).',
+    'auth/popup-blocked': 'Popup blocked. Allow popups for Google sign-in.',
+    'auth/popup-closed-by-user': 'Google sign-in was closed.',
+    'auth/network-request-failed': 'Network error. Check your connection.',
+    'auth/too-many-requests': 'Too many attempts. Please try again later.',
+  };
+  return map[code] || (e?.message || 'Something went wrong.');
+}
