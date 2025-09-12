@@ -56,16 +56,15 @@ const DTT = (()=>{
   function lock(){ key = null; sessionStorage.clear(); setBadge(); }
 
   async function fetchQuote(symbol){
-    try{
-      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const q = data?.quoteResponse?.result?.[0];
-      if (!q) return null;
-      const price = q.regularMarketPrice ?? q.postMarketPrice ?? q.preMarketPrice;
-      return { symbol:q.symbol, name:q.shortName||q.longName||q.symbol, currency:q.currency||'', price: typeof price==='number'? price:null };
-    }catch{ return null; }
-  }
+  try{
+    const url = '/.netlify/functions/quote?symbol=' + encodeURIComponent(symbol);
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json(); // {symbol,name,currency,exchange,price}
+    if (data && typeof data.price === 'number') return data;
+    return null;
+  }catch{ return null; }
+}
   function yfSymbol(ticker, market){
     if (!ticker) return '';
     if (ticker.includes('.')) return ticker.toUpperCase();
