@@ -36,6 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // enc badge
   DTT.setBadgeRef($('#encBadge'), $('#btnLock'));
   $('#btnLock').onclick = () => DTT.lock();
+  // Toggle password visibility
+document.getElementById('togglePwd')?.addEventListener('click', ()=>{
+  const input = document.getElementById('pwd');
+  if (!input) return;
+  input.type = (input.type === 'password') ? 'text' : 'password';
+});
+
 
   // tabs
   $$('.tabs button').forEach(btn => btn.addEventListener('click', () => showTab(btn.dataset.tab)));
@@ -48,6 +55,39 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#btnAddExpense').addEventListener('click', addExpenseModal);
   $('#btnImportExpenses').addEventListener('click', ()=> importTrades('expenses'));
 });
+// --- Auth UI toggling + helpers ---
+function setAuthMode(mode){ // 'in' or 'up'
+  const inBtn = $('#tabSignIn'), upBtn = $('#tabSignUp');
+  const signUpOnly = $('#signUpOnly');
+  const loginBtn = $('#emailLogin'), signupBtn = $('#emailSignup');
+  inBtn.classList.toggle('active', mode==='in');
+  upBtn.classList.toggle('active', mode==='up');
+  signUpOnly.classList.toggle('hidden', mode!=='up');
+  loginBtn.classList.toggle('hidden', mode!=='in');
+  signupBtn.classList.toggle('hidden', mode!=='up');
+  clearAuthError();
+}
+function showAuthError(msg){
+  const box = $('#authError'); box.textContent = msg; box.classList.remove('hidden');
+}
+function clearAuthError(){
+  const box = $('#authError'); if (!box) return;
+  box.textContent = ''; box.classList.add('hidden');
+}
+
+$('#tabSignIn')?.addEventListener('click', ()=> setAuthMode('in'));
+$('#tabSignUp')?.addEventListener('click', ()=> setAuthMode('up'));
+setAuthMode('in');
+
+$('#togglePwd')?.addEventListener('click', ()=>{
+  const input = $('#pwd');
+  if (!input) return;
+  input.type = input.type === 'password' ? 'text' : 'password';
+});
+
+// Make brand act as Home
+$('#homeBtn')?.addEventListener('click', ()=> showTab('watch'));
+
 
 async function loadAllLocal(){
   const prefix = currentUser.uid;

@@ -54,22 +54,39 @@
   </header>
 
   <main class="container">
-    <section id="authPanel" class="card">
-      <h3>Sign in</h3>
-      <p class="muted">Use Google or Email/Password. Your data is encrypted locally with your passphrase.</p>
-      <div class="grid2">
-        <label>Email <input id="email" placeholder="you@example.com"></label>
-        <label>Passphrase <input id="pass" type="password" placeholder="Encryption passphrase (local key)"></label>
+   <section id="authPanel" class="card auth">
+  <h2 class="auth__title">Welcome to Pennyriser</h2>
+  <p class="muted">Sign in with your account. Your data is encrypted locally with your passphrase.</p>
+
+  <div id="authError" class="auth__error hidden"></div>
+
+  <div class="auth__form">
+    <label>Email
+      <input id="email" inputmode="email" autocomplete="email" placeholder="you@example.com">
+    </label>
+
+    <label>Password
+      <div class="pw">
+        <input id="pwd" type="password" autocomplete="current-password" placeholder="Account password">
+        <button id="togglePwd" class="pw__toggle" type="button" aria-label="Show password">👁️</button>
       </div>
-      <div class="row gap">
-        <input id="pwd" type="password" placeholder="Account password (for Email/Password auth)" style="flex:1;">
-        <button id="emailLogin" class="btn">Email Sign in</button>
-        <button id="emailSignup" class="btn secondary">Email Sign up</button>
-      </div>
-      <div class="row right">
-        <button id="googleLogin" class="btn">Continue with Google</button>
-      </div>
-    </section>
+    </label>
+
+    <label>Encryption passphrase
+      <input id="pass" type="password" autocomplete="new-password" placeholder="Used to unlock your local data">
+    </label>
+
+    <div class="auth__actions">
+      <button id="emailLogin" class="btn auth__cta">Sign in</button>
+      <button id="emailSignup" class="btn secondary auth__cta">Create account</button>
+    </div>
+
+    <div class="auth__sep"><span>or</span></div>
+    <button id="googleLogin" class="btn auth__google">Continue with Google</button>
+  </div>
+</section>
+
+
 
     <section id="tab-watch">
       <div class="card row between">

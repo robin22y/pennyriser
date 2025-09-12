@@ -237,4 +237,70 @@ dialog::backdrop {
   padding: 24px;
   color: var(--muted);
   font-size: 0.8rem;
+}/* Auth panel */
+.auth__title { margin-top: 0; }
+.auth__tabs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 12px;
 }
+.auth__tab {
+  border: 1px solid var(--bd);
+  background: #fff; border-radius: 8px; padding: 10px; font-weight: 600; cursor: pointer;
+}
+.auth__tab.active { border-color: var(--primary); color: var(--primary); }
+.auth__error {
+  background: #ffe8e8; color: #a40000; border: 1px solid #ffc2c2;
+  padding: 10px 12px; border-radius: 8px; margin: 8px 0;
+}
+.auth__form label { display: block; margin: 10px 0; }
+.auth__actions { margin-top: 8px; }
+.auth__cta { flex: 1; }
+.auth__sep { text-align: center; color: var(--muted); margin: 12px 0; position: relative; }
+.auth__sep:before, .auth__sep:after {
+  content: ""; height: 1px; background: var(--bd); position: absolute; top: 50%; width: 35%;
+}
+.auth__sep:before { left: 0; } .auth__sep:after { right: 0; }
+.auth__sep span { background: #fff; padding: 0 8px; position: relative; }
+
+.pw { display: flex; align-items: stretch; }
+.pw input { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.pw__toggle {
+  border: 1px solid var(--bd); border-left: 0; background: #fafafa; padding: 0 12px;
+  border-top-right-radius: 8px; border-bottom-right-radius: 8px; cursor: pointer;
+}
+
+/* Better mobile spacing */
+@media (max-width: 640px) {
+  .card.auth { padding: 20px; }
+  .auth__cta, #googleLogin { width: 100%; }
+  .tabs { flex-wrap: wrap; }
+  .tabs button { padding: 10px 8px; }
+}
+
+/* Make brand act like Home affordance */
+.brand { cursor: pointer; }
+
+/* Ensure stacked, comfy inputs on mobile */
+.card.auth { padding: 20px; }
+.auth__form label { display:block; margin: 10px 0; }
+.auth__error {
+  background:#ffe8e8; color:#a40000; border:1px solid #ffc2c2;
+  padding:10px 12px; border-radius:8px; margin:8px 0;
+}
+.pw { display:flex; align-items:stretch; }
+.pw input { border-top-right-radius:0; border-bottom-right-radius:0; }
+.pw__toggle {
+  border:1px solid var(--bd); border-left:0; background:#fafafa; padding:0 12px;
+  border-top-right-radius:8px; border-bottom-right-radius:8px; cursor:pointer;
+}
+.auth__actions { display:flex; gap:10px; margin-top:12px; }
+.auth__cta { flex:1; }
+
+/* Larger tap targets on small screens */
+@media (max-width:640px){
+  input, select, textarea { min-height: 44px; } /* comfy finger size */
+  .auth__actions { flex-direction: column; }
+  .auth__cta, #googleLogin { width:100%; }
+}
+
+/* Make brand feel like home button */
+.brand { cursor: pointer; }
